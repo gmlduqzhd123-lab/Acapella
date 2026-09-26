@@ -80,6 +80,7 @@
 
         .btn-record { background: #ff4757; color: white; }
         .btn-stop { background: #2f3542; color: white; }
+        .pad:not(.is-recording) .btn-stop { display: none; }   /* 취소는 녹음 중에만 표시 */
         .btn-play { background: #1e90ff; color: white; }
         .btn-delete { background: #747d8c; color: white; }
         .btn-metro { background: #ffa502; color: white; padding: 10px 20px; }
@@ -103,6 +104,50 @@
         }
 
         footer { margin-top: 50px; padding-bottom: 20px; color: #95a5a6; font-weight: bold; font-size: 15px; }
+
+
+        /* 따라 하기 가이드 카드 */
+        .guide {
+            width: 100%; background: rgba(255,255,255,0.55); border-radius: 12px;
+            padding: 8px 10px; margin-bottom: 10px; font-size: 13px;
+        }
+        .guide-tip { color: rgba(0,0,0,0.65); margin-bottom: 6px; font-weight: 600; }
+        .guide-row { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+        .guide-label { flex: 0 0 52px; font-size: 12px; font-weight: bold; color: rgba(0,0,0,0.55); text-align: left; }
+        .guide-cells { flex: 1; display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; }
+        .guide-cell {
+            height: 26px; line-height: 26px; border-radius: 6px; font-weight: 800; font-size: 13px;
+            background: rgba(255,255,255,0.6); color: #2c3e50;
+        }
+        .guide-cell.rest { color: rgba(0,0,0,0.2); }
+        .guide-cell.beat { box-shadow: inset 0 -2px 0 rgba(0,0,0,0.12); }
+        .guide-cell.now { background: #2c3e50; color: white; }
+        .guide-note { font-size: 11px; color: rgba(0,0,0,0.45); margin-top: 4px; }
+
+        .btn-example { background: #16a085; color: white; }
+        .btn-solo { background: #e67e22; color: white; }
+
+        /* 릴레이: 다음 녹음 차례 */
+        .pad.next-turn { outline: 3px dashed rgba(0,0,0,0.35); outline-offset: 3px; }
+
+        /* 빠진 파트 찾기 퀴즈 */
+        .btn-quiz { background: #6c5ce7; color: white; font-size: 16px; padding: 15px 30px; border-radius: 30px; }
+        .quiz {
+            display: none; max-width: 800px; margin: 25px auto 0; background: white; border-radius: 20px;
+            padding: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+        }
+        .quiz.active { display: block; }
+        .quiz h3 { font-size: 20px; margin-bottom: 8px; }
+        .quiz-msg { font-size: 16px; font-weight: bold; margin-bottom: 14px; min-height: 22px; }
+        .quiz-options { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 14px; }
+        .quiz-options button { font-size: 16px; padding: 12px 20px; color: #2c3e50; }
+        .quiz-options button.wrong { text-decoration: line-through; }
+        .quiz-options button.right { outline: 3px solid #2ed573; }
+        .quiz-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .btn-quiz-next { background: #6c5ce7; color: white; }
+        .btn-quiz-end { background: #b2bec3; color: white; }
+        .quiz-score { margin-top: 12px; font-size: 14px; color: #7f8c8d; font-weight: bold; }
+        .quiz-mode .pad canvas { visibility: hidden; }
 
         @media (max-width: 600px) {
             .grid-container { grid-template-columns: 1fr; }
@@ -139,6 +184,7 @@
             <div class="recording-indicator"></div>
             <h2>🥁 비트박스</h2>
             <div class="status"></div>
+            <div class="guide" id="guide-beatbox"></div>
             <canvas id="canvas-beatbox"></canvas>
             <div class="volume-control">
                 🔊 <input type="range" id="vol-beatbox" min="0" max="1" step="0.05" value="1" oninput="changeVolume('beatbox', this.value)">
@@ -148,6 +194,8 @@
                 <button class="btn-stop" onclick="cancelRecording()" disabled>취소 ⬛</button>
                 <button class="btn-play" onclick="playTrack('beatbox')" disabled>재생 ▶️</button>
                 <button class="btn-delete" onclick="deleteTrack('beatbox')" disabled>삭제 🗑️</button>
+                <button class="btn-example" onclick="toggleExample('beatbox')">예시 듣기 👂</button>
+                <button class="btn-solo" onclick="soloTrack('beatbox')" disabled>솔로 🎧</button>
             </div>
         </div>
 
@@ -156,6 +204,7 @@
             <div class="recording-indicator"></div>
             <h2>🎸 베이스</h2>
             <div class="status"></div>
+            <div class="guide" id="guide-bass"></div>
             <canvas id="canvas-bass"></canvas>
             <div class="volume-control">
                 🔊 <input type="range" id="vol-bass" min="0" max="1" step="0.05" value="1" oninput="changeVolume('bass', this.value)">
@@ -165,6 +214,8 @@
                 <button class="btn-stop" onclick="cancelRecording()" disabled>취소 ⬛</button>
                 <button class="btn-play" onclick="playTrack('bass')" disabled>재생 ▶️</button>
                 <button class="btn-delete" onclick="deleteTrack('bass')" disabled>삭제 🗑️</button>
+                <button class="btn-example" onclick="toggleExample('bass')">예시 듣기 👂</button>
+                <button class="btn-solo" onclick="soloTrack('bass')" disabled>솔로 🎧</button>
             </div>
         </div>
 
@@ -173,6 +224,7 @@
             <div class="recording-indicator"></div>
             <h2>👥 화음(코러스)</h2>
             <div class="status"></div>
+            <div class="guide" id="guide-chorus"></div>
             <canvas id="canvas-chorus"></canvas>
             <div class="volume-control">
                 🔊 <input type="range" id="vol-chorus" min="0" max="1" step="0.05" value="1" oninput="changeVolume('chorus', this.value)">
@@ -182,6 +234,8 @@
                 <button class="btn-stop" onclick="cancelRecording()" disabled>취소 ⬛</button>
                 <button class="btn-play" onclick="playTrack('chorus')" disabled>재생 ▶️</button>
                 <button class="btn-delete" onclick="deleteTrack('chorus')" disabled>삭제 🗑️</button>
+                <button class="btn-example" onclick="toggleExample('chorus')">예시 듣기 👂</button>
+                <button class="btn-solo" onclick="soloTrack('chorus')" disabled>솔로 🎧</button>
             </div>
         </div>
 
@@ -190,6 +244,7 @@
             <div class="recording-indicator"></div>
             <h2>🎵 메인 멜로디</h2>
             <div class="status"></div>
+            <div class="guide" id="guide-melody"></div>
             <canvas id="canvas-melody"></canvas>
             <div class="volume-control">
                 🔊 <input type="range" id="vol-melody" min="0" max="1" step="0.05" value="1" oninput="changeVolume('melody', this.value)">
@@ -199,6 +254,8 @@
                 <button class="btn-stop" onclick="cancelRecording()" disabled>취소 ⬛</button>
                 <button class="btn-play" onclick="playTrack('melody')" disabled>재생 ▶️</button>
                 <button class="btn-delete" onclick="deleteTrack('melody')" disabled>삭제 🗑️</button>
+                <button class="btn-example" onclick="toggleExample('melody')">예시 듣기 👂</button>
+                <button class="btn-solo" onclick="soloTrack('melody')" disabled>솔로 🎧</button>
             </div>
         </div>
     </div>
@@ -206,6 +263,18 @@
     <div class="global-controls">
         <button class="btn-global-play" id="btn-global-play" onclick="playAll()">전체 동시 재생 🌟</button>
         <button class="btn-global-stop" onclick="stopAll()">전체 정지 ✋</button>
+        <button class="btn-quiz" id="btn-quiz" onclick="startQuiz()" disabled>빠진 파트 찾기 퀴즈 🕵️</button>
+    </div>
+
+    <div class="quiz" id="quiz">
+        <h3>🕵️ 빠진 파트 찾기</h3>
+        <p class="quiz-msg" id="quiz-msg"></p>
+        <div class="quiz-options" id="quiz-options"></div>
+        <div class="quiz-actions">
+            <button class="btn-quiz-next" id="quiz-next" onclick="nextQuestion()">다음 문제 ➡️</button>
+            <button class="btn-quiz-end" onclick="endQuiz()">퀴즈 끝내기</button>
+        </div>
+        <p class="quiz-score" id="quiz-score"></p>
     </div>
 
     <footer>Made by. 엽쌤</footer>
@@ -260,6 +329,7 @@
 
         barsSelect.addEventListener('change', (e) => {
             bars = Number(e.target.value);
+            buildGuides();
             saveSettings();
         });
 
@@ -394,7 +464,7 @@
 
         // 파트 재생 버튼: 이미 반복 재생 중이면 박자에 맞춰 그 파트를 켜고/끔
         function playTrack(part) {
-            if (!buffers[part] || rec) return;
+            if (!buffers[part] || rec || quiz) return;
             initAudioCtx();
             if (sources[part]) {
                 stopSource(part);
@@ -410,21 +480,24 @@
         }
 
         function playAll() {
-            if (rec || !hasAnyTrack()) return;
+            if (rec || quiz || !hasAnyTrack()) return;
             initAudioCtx();
             stopTransport();
+            stopAllExamples();
             startTransport(audioCtx.currentTime + 0.05, parts.filter(p => buffers[p]));
             updateUI();
         }
 
         function stopAll() {
             if (rec) cancelRecording();
+            if (quiz) endQuiz();
+            stopAllExamples();
             stopTransport();
             updateUI();
         }
 
         function deleteTrack(part) {
-            if (rec) return;
+            if (rec || quiz) return;
             if (!confirm('이 파트의 녹음을 삭제할까요?')) return;
             stopSource(part);
             if (!parts.some(p => sources[p])) transportRunning = false;
@@ -517,10 +590,11 @@
         }
 
         async function startRecording(part) {
-            if (rec || !isSupported) return;
+            if (rec || quiz || !isSupported) return;
             if (buffers[part] && !confirm('이미 녹음된 파트입니다. 다시 녹음할까요?')) return;
             initAudioCtx();
             stopTransport();
+            stopAllExamples();
 
             const m = await openMic();
             if (!m) return;
@@ -606,12 +680,18 @@
                 const pad = document.getElementById(`pad-${part}`);
                 const recordingThis = rec && rec.part === part;
                 pad.classList.toggle('is-recording', !!recordingThis);
-                pad.querySelector('.btn-record').disabled = !isSupported || !!rec;
+                const busy = !!rec || !!quiz;
+                pad.classList.toggle('next-turn', !busy && part === nextTurnPart());
+                pad.querySelector('.btn-record').disabled = !isSupported || busy;
                 pad.querySelector('.btn-stop').disabled = !recordingThis;
                 const playBtn = pad.querySelector('.btn-play');
-                playBtn.disabled = !buffers[part] || !!rec;
-                playBtn.textContent = sources[part] && !rec ? '멈춤 ⏸️' : '재생 ▶️';
-                pad.querySelector('.btn-delete').disabled = !buffers[part] || !!rec;
+                playBtn.disabled = !buffers[part] || busy;
+                playBtn.textContent = sources[part] && !busy ? '멈춤 ⏸️' : '재생 ▶️';
+                pad.querySelector('.btn-delete').disabled = !buffers[part] || busy;
+                pad.querySelector('.btn-solo').disabled = !buffers[part] || busy;
+                const exBtn = pad.querySelector('.btn-example');
+                exBtn.disabled = busy;
+                exBtn.textContent = examples[part] ? '예시 멈춤 ⏹️' : '예시 듣기 👂';
             });
             // 녹음된 파트가 있으면 루프 길이가 바뀌지 않도록 BPM/길이 잠금
             const locked = any || !!rec;
@@ -620,8 +700,9 @@
             document.getElementById('lockHint').textContent = locked
                 ? '🔒 모든 파트의 박자를 맞추기 위해 BPM과 길이가 고정되었습니다. (모든 녹음을 삭제하면 변경 가능)'
                 : '녹음을 누르면 "하나, 둘, 셋, 넷" 카운트인 후 녹음이 시작되고, 정해진 길이가 되면 자동으로 끝나요.';
-            document.getElementById('btn-download').disabled = !any || !!rec;
-            document.getElementById('btn-global-play').disabled = !any || !!rec;
+            document.getElementById('btn-download').disabled = !any || !!rec || !!quiz;
+            document.getElementById('btn-global-play').disabled = !any || !!rec || !!quiz;
+            document.getElementById('btn-quiz').disabled = parts.filter(p => buffers[p]).length < 2 || !!rec || !!quiz;
         }
 
         function statusText(part) {
@@ -634,8 +715,11 @@
                 const bar = Math.min(bars, Math.floor((now - rec.startTime) / barDur()) + 1);
                 return `🔴 녹음 중 ${bar} / ${bars}마디`;
             }
+            if (quiz) return buffers[part] ? '❓ 비밀!' : '녹음 전';
+            if (examples[part]) return '👂 예시 재생 중 — 카드를 보며 따라 해 보세요';
             if (sources[part]) return '🔁 반복 재생 중';
             if (buffers[part]) return `✅ 녹음 완료 (${bars}마디)`;
+            if (!rec && part === nextTurnPart()) return '👉 다음 녹음 차례!';
             return '녹음 전';
         }
 
@@ -695,11 +779,324 @@
         function render() {
             parts.forEach(part => {
                 drawPad(part);
+                highlightGuide(part);
                 const el = document.querySelector(`#pad-${part} .status`);
                 const text = statusText(part);
                 if (el.textContent !== text) el.textContent = text;
             });
             requestAnimationFrame(render);
+        }
+
+        // --- 아이디어 1: 파트별 "따라 하기 가이드" (음절 카드 + 예시 듣기) ---
+        // 한 칸 = 8분음표, 한 마디 = 8칸. 코드 진행은 '작은 별'에 맞춘 C - F - C - G
+        const STEPS_PER_BAR = 8;
+        const N = { C2: 65.41, F2: 87.31, G2: 98.0, C3: 130.81,
+                    C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.0, A4: 440.0 };
+
+        const GUIDES = {
+            beatbox: {
+                tip: '입술을 붙였다 떼며 "북", 혀끝으로 "치", 입술을 터뜨리며 "박"',
+                repeatNote: '모든 마디 똑같이 반복해요',
+                bars: [{ label: '매 마디', steps: ['북', '치', '박', '치', '북', '북', '박', '치'] }],
+                sound: { '북': 'kick', '치': 'hat', '박': 'snare' },
+            },
+            bass: {
+                tip: '입을 다물고 낮고 굵게 "둠" (코로 울리게)',
+                bars: [
+                    { label: '도 (C)', note: N.C3, steps: ['둠', '', '', '', '둠', '', '둠', ''] },
+                    { label: '파 (F)', note: N.F2, steps: ['둠', '', '', '', '둠', '', '둠', ''] },
+                    { label: '도 (C)', note: N.C3, steps: ['둠', '', '', '', '둠', '', '둠', ''] },
+                    { label: '솔 (G)', note: N.G2, steps: ['둠', '', '', '', '둠', '', '둠', ''] },
+                ],
+            },
+            chorus: {
+                tip: '한 마디 동안 "우~" 하고 부드럽게 길게 (숨을 나눠 쉬어요)',
+                bars: [
+                    { label: '미', note: N.E4, steps: ['우', '~', '~', '~', '~', '~', '~', '~'] },
+                    { label: '파', note: N.F4, steps: ['우', '~', '~', '~', '~', '~', '~', '~'] },
+                    { label: '미', note: N.E4, steps: ['우', '~', '~', '~', '~', '~', '~', '~'] },
+                    { label: '레', note: N.D4, steps: ['우', '~', '~', '~', '~', '~', '~', '~'] },
+                ],
+            },
+            melody: {
+                tip: '"작은 별"을 한 박에 한 글자씩 또박또박',
+                bars: [
+                    { label: '도도솔솔', notes: [N.C4, N.C4, N.G4, N.G4], steps: ['반', '', '짝', '', '반', '', '짝', ''] },
+                    { label: '라라솔', notes: [N.A4, N.A4, N.G4], steps: ['작', '', '은', '', '별', '~', '~', '~'] },
+                    { label: '파파미미', notes: [N.F4, N.F4, N.E4, N.E4], steps: ['아', '', '름', '', '답', '', '게', ''] },
+                    { label: '레레도', notes: [N.D4, N.D4, N.C4], steps: ['비', '', '치', '', '네', '~', '~', '~'] },
+                ],
+            },
+        };
+
+        const guideState = {};   // part -> { cells: [[el...]], lastKey }
+        const examples = {};     // part -> { start, barOffset, nodes, timer }
+
+        function buildGuides() {
+            parts.forEach(part => {
+                const g = GUIDES[part];
+                const box = document.getElementById(`guide-${part}`);
+                const rowsShown = g.bars.length === 1 ? 1 : Math.min(bars, g.bars.length);
+                let html = `<div class="guide-tip">💬 ${g.tip}</div>`;
+                for (let r = 0; r < rowsShown; r++) {
+                    const bar = g.bars[r];
+                    html += `<div class="guide-row"><span class="guide-label">${bar.label}</span><div class="guide-cells">` +
+                        bar.steps.map((t, i) =>
+                            `<div class="guide-cell${t ? '' : ' rest'}${i % 2 === 0 ? ' beat' : ''}">${t || '·'}</div>`
+                        ).join('') + '</div></div>';
+                }
+                const note = g.repeatNote || (bars > rowsShown ? `${rowsShown}마디를 반복해요` : '');
+                if (note) html += `<div class="guide-note">🔁 ${note}</div>`;
+                box.innerHTML = html;
+                guideState[part] = {
+                    cells: [...box.querySelectorAll('.guide-cells')].map(row => [...row.children]),
+                    lastKey: null,
+                };
+            });
+        }
+
+        // 지금 몇 번째 칸인지 계산 (예시 재생, 녹음, 반복 재생 중일 때)
+        function currentGuideCell(part) {
+            if (!audioCtx) return null;
+            const now = audioCtx.currentTime;
+            const stepDur = beatDur() / 2;
+            let pos, barOffset = 0;
+            if (examples[part]) { pos = now - examples[part].start; barOffset = examples[part].barOffset; }
+            else if (rec) pos = now - rec.startTime;
+            else if (transportRunning) pos = now - clockOrigin;
+            else return null;
+            if (pos < 0) return null;
+            const step = Math.floor(pos / stepDur) % (bars * STEPS_PER_BAR);
+            const barInLoop = (Math.floor(step / STEPS_PER_BAR) + barOffset) % bars;
+            const rows = guideState[part].cells.length;
+            return { row: barInLoop % rows, cell: step % STEPS_PER_BAR };
+        }
+
+        function highlightGuide(part) {
+            const st = guideState[part];
+            if (!st) return;
+            const c = currentGuideCell(part);
+            const key = c ? `${c.row}-${c.cell}` : null;
+            if (key === st.lastKey) return;
+            if (st.lastKey) {
+                const [r, i] = st.lastKey.split('-').map(Number);
+                st.cells[r][i].classList.remove('now');
+            }
+            if (c) st.cells[c.row][c.cell].classList.add('now');
+            st.lastKey = key;
+        }
+
+        // 예시 소리 합성 (가이드 소리는 믹스·다운로드에 들어가지 않음)
+        let noiseBuffer = null;
+        function getNoise() {
+            if (!noiseBuffer) {
+                noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.5, audioCtx.sampleRate);
+                const d = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+            }
+            return noiseBuffer;
+        }
+
+        function envelope(gainNode, t, peak, attack, dur) {
+            gainNode.gain.setValueAtTime(0.0001, t);
+            gainNode.gain.exponentialRampToValueAtTime(peak, t + attack);
+            gainNode.gain.setValueAtTime(peak, t + Math.max(attack, dur - 0.05));
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        }
+
+        function synthDrum(type, t, out) {
+            const g = audioCtx.createGain();
+            g.connect(out);
+            if (type === 'kick') {
+                const osc = audioCtx.createOscillator();
+                osc.frequency.setValueAtTime(150, t);
+                osc.frequency.exponentialRampToValueAtTime(45, t + 0.12);
+                g.gain.setValueAtTime(1, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+                osc.connect(g); osc.start(t); osc.stop(t + 0.26);
+                return osc;
+            }
+            const src = audioCtx.createBufferSource();
+            src.buffer = getNoise();
+            const f = audioCtx.createBiquadFilter();
+            f.type = type === 'hat' ? 'highpass' : 'bandpass';
+            f.frequency.value = type === 'hat' ? 7000 : 1800;
+            const len = type === 'hat' ? 0.05 : 0.15;
+            g.gain.setValueAtTime(type === 'hat' ? 0.5 : 0.8, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + len);
+            src.connect(f); f.connect(g); src.start(t); src.stop(t + len + 0.01);
+            return src;
+        }
+
+        function synthNote(freq, t, dur, wave, out, attack, vibrato) {
+            const osc = audioCtx.createOscillator();
+            osc.type = wave;
+            osc.frequency.value = freq;
+            const g = audioCtx.createGain();
+            envelope(g, t, 0.35, attack, dur);
+            osc.connect(g); g.connect(out);
+            if (vibrato) {
+                const lfo = audioCtx.createOscillator(), depth = audioCtx.createGain();
+                lfo.frequency.value = 5; depth.gain.value = freq * 0.01;
+                lfo.connect(depth); depth.connect(osc.frequency);
+                lfo.start(t); lfo.stop(t + dur);
+            }
+            osc.start(t); osc.stop(t + dur + 0.01);
+            return osc;
+        }
+
+        function scheduleGuideBar(part, barIndex, t, out, nodes) {
+            const g = GUIDES[part];
+            const bar = g.bars[barIndex % g.bars.length];
+            const step = beatDur() / 2;
+            if (part === 'beatbox') {
+                bar.steps.forEach((syl, i) => { if (g.sound[syl]) nodes.push(synthDrum(g.sound[syl], t + i * step, out)); });
+            } else if (part === 'bass') {
+                bar.steps.forEach((syl, i) => {
+                    if (!syl) return;
+                    let len = 1; while (i + len < STEPS_PER_BAR && !bar.steps[i + len]) len++;
+                    nodes.push(synthNote(bar.note, t + i * step, len * step * 0.9, 'triangle', out, 0.01, false));
+                });
+            } else if (part === 'chorus') {
+                nodes.push(synthNote(bar.note, t, STEPS_PER_BAR * step * 0.97, 'sine', out, 0.08, true));
+            } else {
+                let n = 0;
+                bar.steps.forEach((syl, i) => {
+                    if (!syl || syl === '~') return;
+                    let len = 1; while (i + len < STEPS_PER_BAR && (!bar.steps[i + len] || bar.steps[i + len] === '~')) len++;
+                    nodes.push(synthNote(bar.notes[n++], t + i * step, len * step * 0.9, 'triangle', out, 0.02, false));
+                });
+            }
+        }
+
+        function stopExample(part) {
+            const ex = examples[part];
+            if (!ex) return;
+            clearTimeout(ex.timer);
+            ex.nodes.forEach(n => { try { n.stop(); } catch (e) {} });
+            ex.out.disconnect();
+            delete examples[part];
+            updateUI();
+        }
+
+        // 예시 듣기: 반복 재생 중이면 다음 마디 시작에 맞춰 함께 들려줌
+        function toggleExample(part) {
+            if (rec) return;
+            initAudioCtx();
+            if (examples[part]) { stopExample(part); return; }
+            let start = audioCtx.currentTime + 0.05, barOffset = 0;
+            if (transportRunning) {
+                const barsFromOrigin = Math.ceil((start - clockOrigin) / barDur());
+                start = clockOrigin + barsFromOrigin * barDur();
+                barOffset = ((barsFromOrigin % bars) + bars) % bars;
+            }
+            const out = audioCtx.createGain();
+            out.gain.value = 0.7;
+            out.connect(audioCtx.destination);
+            const nodes = [];
+            for (let b = 0; b < bars; b++) scheduleGuideBar(part, (barOffset + b) % bars, start + b * barDur(), out, nodes);
+            examples[part] = {
+                start, barOffset, nodes, out,
+                timer: setTimeout(() => stopExample(part), (start - audioCtx.currentTime + loopDur()) * 1000 + 200),
+            };
+            updateUI();
+        }
+
+        function stopAllExamples() {
+            Object.keys(examples).forEach(stopExample);
+        }
+
+        // --- 아이디어 3: 레이어 쌓기 릴레이 & 솔로 & 빠진 파트 찾기 퀴즈 ---
+        function nextTurnPart() {
+            return parts.find(p => !buffers[p]) || null;
+        }
+
+        // 솔로: 이 파트만 남기고 나머지 파트는 끔 (반복 박자는 유지)
+        function soloTrack(part) {
+            if (!buffers[part] || rec || quiz) return;
+            initAudioCtx();
+            parts.forEach(p => { if (p !== part) stopSource(p); });
+            if (!sources[part]) {
+                if (transportRunning) {
+                    const when = audioCtx.currentTime + 0.02;
+                    startSource(part, when, ((when - clockOrigin) % loopDur() + loopDur()) % loopDur());
+                } else {
+                    startTransport(audioCtx.currentTime + 0.05, [part]);
+                }
+            }
+            updateUI();
+        }
+
+        const PART_NAMES = { beatbox: '🥁 비트박스', bass: '🎸 베이스', chorus: '👥 화음', melody: '🎵 멜로디' };
+        let quiz = null;   // { answer, tried: Set, solved }
+        let quizScore = { right: 0, total: 0, streak: 0 };
+
+        function startQuiz() {
+            if (rec || parts.filter(p => buffers[p]).length < 2) return;
+            quizScore = { right: 0, total: 0, streak: 0 };
+            document.body.classList.add('quiz-mode');
+            document.getElementById('quiz').classList.add('active');
+            nextQuestion();
+            document.getElementById('quiz').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function nextQuestion() {
+            initAudioCtx();
+            stopAllExamples();
+            const recorded = parts.filter(p => buffers[p]);
+            let answer;
+            do { answer = recorded[Math.floor(Math.random() * recorded.length)]; }
+            while (quiz && recorded.length > 1 && answer === quiz.answer && Math.random() < 0.7);
+            quiz = { answer, tried: new Set(), solved: false };
+
+            stopTransport();
+            startTransport(audioCtx.currentTime + 0.05, recorded.filter(p => p !== answer));
+
+            document.getElementById('quiz-msg').textContent = '잘 들어보세요! 어떤 파트가 빠졌을까요? 🤔';
+            document.getElementById('quiz-options').innerHTML = recorded.map(p =>
+                `<button style="background: var(--${p}-bg)" onclick="answerQuiz('${p}', this)">${PART_NAMES[p]}</button>`
+            ).join('');
+            document.getElementById('quiz-next').disabled = true;
+            renderQuizScore();
+            updateUI();
+        }
+
+        function answerQuiz(part, btn) {
+            if (!quiz || quiz.solved || quiz.tried.has(part)) return;
+            quiz.tried.add(part);
+            const msg = document.getElementById('quiz-msg');
+            if (part === quiz.answer) {
+                quiz.solved = true;
+                if (quiz.tried.size === 1) { quizScore.right++; quizScore.streak++; } else quizScore.streak = 0;
+                quizScore.total++;
+                btn.classList.add('right');
+                msg.textContent = `정답! 🎉 ${PART_NAMES[part]} 파트가 빠져 있었어요. 이제 모두 함께 들어볼까요?`;
+                // 정답 공개: 빠진 파트를 박자에 맞춰 다시 넣어 줌
+                const when = audioCtx.currentTime + 0.02;
+                startSource(part, when, ((when - clockOrigin) % loopDur() + loopDur()) % loopDur());
+                document.getElementById('quiz-options').querySelectorAll('button').forEach(b => b.disabled = true);
+                document.getElementById('quiz-next').disabled = false;
+            } else {
+                btn.disabled = true;
+                btn.classList.add('wrong');
+                msg.textContent = `${PART_NAMES[part]} 파트는 들리고 있어요! 다시 들어보세요 👂`;
+            }
+            renderQuizScore();
+        }
+
+        function renderQuizScore() {
+            const s = quizScore;
+            document.getElementById('quiz-score').textContent =
+                `한 번에 맞힌 문제 ${s.right} / ${s.total}` + (s.streak >= 2 ? `  ·  🔥 ${s.streak}연속 정답!` : '');
+        }
+
+        function endQuiz() {
+            if (!quiz) return;
+            quiz = null;
+            document.body.classList.remove('quiz-mode');
+            document.getElementById('quiz').classList.remove('active');
+            stopTransport();
+            updateUI();
         }
 
         // --- WAV 믹스다운 ---
@@ -864,6 +1261,7 @@
             } catch (e) {
                 console.warn('이전 녹음 불러오기 실패', e);
             }
+            buildGuides();
             updateUI();
         }
 
@@ -876,6 +1274,7 @@
 
         window.onload = () => {
             if (!isSupported) document.getElementById('unsupported').style.display = 'block';
+            buildGuides();
             updateUI();
             restoreSession();
             requestAnimationFrame(render);
