@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>아카펠라 메이커 - 엽쌤스쿨</title>
+    <title>교실 속 4채널 루퍼 - 엽쌤스쿨</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
     <style>
         :root {
             --bg-color: #f4f7f6;
@@ -15,23 +16,30 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, sans-serif; }
-        
+
         body { background-color: var(--bg-color); color: var(--text-color); padding: 20px; text-align: center; }
-        
+
         h1 { margin-bottom: 5px; font-size: 28px; font-weight: 800; color: #2c3e50; }
         .notice { font-size: 14px; color: #e74c3c; margin-bottom: 20px; font-weight: bold; }
+        .unsupported {
+            display: none; max-width: 800px; margin: 0 auto 20px; padding: 12px 16px;
+            background: #fff3cd; color: #856404; border-radius: 12px; font-weight: bold; font-size: 14px;
+        }
 
         .top-controls {
-            background: white; padding: 15px 20px; border-radius: 30px; 
-            display: inline-flex; align-items: center; gap: 20px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; flex-wrap: wrap; justify-content: center;
+            background: white; padding: 15px 20px; border-radius: 30px;
+            display: inline-flex; align-items: center; gap: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 10px; flex-wrap: wrap; justify-content: center;
         }
 
         .bpm-control { display: flex; align-items: center; gap: 10px; font-weight: bold; }
+        .bpm-control select { font-size: 14px; font-weight: bold; padding: 4px 8px; border-radius: 8px; border: 1px solid #ccc; }
         input[type="range"] { cursor: pointer; }
+        input:disabled, select:disabled { cursor: not-allowed; opacity: 0.5; }
+        .lock-hint { font-size: 13px; color: #7f8c8d; margin-bottom: 30px; min-height: 18px; }
 
         .grid-container {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; 
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
             max-width: 800px; margin: 0 auto;
         }
 
@@ -39,16 +47,18 @@
             padding: 20px; border-radius: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.08);
             display: flex; flex-direction: column; align-items: center; position: relative;
         }
-        
-        .pad h2 { font-size: 20px; margin-bottom: 10px; color: rgba(0,0,0,0.8); }
-        
+
+        .pad h2 { font-size: 20px; margin-bottom: 4px; color: rgba(0,0,0,0.8); }
+        .pad .status { font-size: 13px; font-weight: bold; color: rgba(0,0,0,0.55); margin-bottom: 8px; min-height: 18px; }
+        .is-recording .status { color: #c0392b; }
+
         .pad.beatbox { background-color: var(--beatbox-bg); }
         .pad.bass { background-color: var(--bass-bg); }
         .pad.chorus { background-color: var(--chorus-bg); }
         .pad.melody { background-color: var(--melody-bg); }
 
         canvas {
-            width: 100%; height: 60px; background: rgba(255,255,255,0.4); 
+            width: 100%; height: 60px; background: rgba(255,255,255,0.4);
             border-radius: 12px; margin-bottom: 10px;
         }
 
@@ -61,11 +71,12 @@
         .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
         button {
-            border: none; padding: 10px 16px; border-radius: 20px; font-weight: bold; 
+            border: none; padding: 10px 16px; border-radius: 20px; font-weight: bold;
             font-size: 14px; cursor: pointer; transition: all 0.2s;
         }
         button:active { transform: scale(0.95); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button:disabled { opacity: 0.35; filter: grayscale(0.8); cursor: not-allowed; }
+        button:disabled:active { transform: none; }
 
         .btn-record { background: #ff4757; color: white; }
         .btn-stop { background: #2f3542; color: white; }
@@ -79,7 +90,7 @@
         .btn-global-stop { background: #ff6b81; color: white; font-size: 16px; padding: 15px 30px; border-radius: 30px; }
 
         .recording-indicator {
-            position: absolute; top: 20px; right: 20px; width: 12px; height: 12px; 
+            position: absolute; top: 20px; right: 20px; width: 12px; height: 12px;
             background: #ff4757; border-radius: 50%; display: none;
             animation: pulse 1s infinite;
         }
@@ -101,293 +112,599 @@
 <body>
 
     <h1>🎤 교실 속 4채널 루퍼</h1>
-    <p class="notice">💡 녹음 시 이어폰을 꼭 착용해주세요! (스피커 소리가 들어가면 하울링이 발생합니다)</p>
-    
+    <p class="notice">💡 녹음 시 유선 이어폰을 꼭 착용해주세요! (스피커 소리가 들어가면 하울링이 발생하고, 블루투스 이어폰은 박자가 밀립니다)</p>
+    <p class="unsupported" id="unsupported">⚠️ 이 브라우저는 녹음을 지원하지 않습니다. 최신 크롬, 사파리, 엣지에서 열어주세요.</p>
+
     <div class="top-controls">
         <div class="bpm-control">
             BPM: <span id="bpmValue">120</span>
             <input type="range" id="bpmSlider" min="60" max="180" value="120">
         </div>
+        <div class="bpm-control">
+            길이:
+            <select id="barsSelect">
+                <option value="2">2마디</option>
+                <option value="4" selected>4마디</option>
+                <option value="8">8마디</option>
+            </select>
+        </div>
         <button class="btn-metro" id="metroToggle">메트로놈 켜기 ⏱️</button>
         <button class="btn-download" id="btn-download" onclick="downloadMix()">음원(.wav) 다운로드 💾</button>
     </div>
+    <p class="lock-hint" id="lockHint"></p>
 
     <div class="grid-container">
         <!-- Beatbox -->
         <div class="pad beatbox" id="pad-beatbox">
             <div class="recording-indicator"></div>
             <h2>🥁 비트박스</h2>
+            <div class="status"></div>
             <canvas id="canvas-beatbox"></canvas>
             <div class="volume-control">
                 🔊 <input type="range" id="vol-beatbox" min="0" max="1" step="0.05" value="1" oninput="changeVolume('beatbox', this.value)">
             </div>
             <div class="controls">
                 <button class="btn-record" onclick="startRecording('beatbox')">녹음 🔴</button>
-                <button class="btn-stop" onclick="stopRecording('beatbox')" disabled>정지 ⬛</button>
-                <button class="btn-play" id="play-beatbox" onclick="playTrack('beatbox')" disabled>재생 ▶️</button>
-                <button class="btn-delete" id="del-beatbox" onclick="deleteTrack('beatbox')" disabled>삭제 🗑️</button>
+                <button class="btn-stop" onclick="cancelRecording()" disabled>취소 ⬛</button>
+                <button class="btn-play" onclick="playTrack('beatbox')" disabled>재생 ▶️</button>
+                <button class="btn-delete" onclick="deleteTrack('beatbox')" disabled>삭제 🗑️</button>
             </div>
-            <audio id="audio-beatbox" onended="stopVisualizer('beatbox')"></audio>
         </div>
 
         <!-- Bass -->
         <div class="pad bass" id="pad-bass">
             <div class="recording-indicator"></div>
             <h2>🎸 베이스</h2>
+            <div class="status"></div>
             <canvas id="canvas-bass"></canvas>
             <div class="volume-control">
                 🔊 <input type="range" id="vol-bass" min="0" max="1" step="0.05" value="1" oninput="changeVolume('bass', this.value)">
             </div>
             <div class="controls">
                 <button class="btn-record" onclick="startRecording('bass')">녹음 🔴</button>
-                <button class="btn-stop" onclick="stopRecording('bass')" disabled>정지 ⬛</button>
-                <button class="btn-play" id="play-bass" onclick="playTrack('bass')" disabled>재생 ▶️</button>
-                <button class="btn-delete" id="del-bass" onclick="deleteTrack('bass')" disabled>삭제 🗑️</button>
+                <button class="btn-stop" onclick="cancelRecording()" disabled>취소 ⬛</button>
+                <button class="btn-play" onclick="playTrack('bass')" disabled>재생 ▶️</button>
+                <button class="btn-delete" onclick="deleteTrack('bass')" disabled>삭제 🗑️</button>
             </div>
-            <audio id="audio-bass" onended="stopVisualizer('bass')"></audio>
         </div>
 
         <!-- Chorus -->
         <div class="pad chorus" id="pad-chorus">
             <div class="recording-indicator"></div>
             <h2>👥 화음(코러스)</h2>
+            <div class="status"></div>
             <canvas id="canvas-chorus"></canvas>
             <div class="volume-control">
                 🔊 <input type="range" id="vol-chorus" min="0" max="1" step="0.05" value="1" oninput="changeVolume('chorus', this.value)">
             </div>
             <div class="controls">
                 <button class="btn-record" onclick="startRecording('chorus')">녹음 🔴</button>
-                <button class="btn-stop" onclick="stopRecording('chorus')" disabled>정지 ⬛</button>
-                <button class="btn-play" id="play-chorus" onclick="playTrack('chorus')" disabled>재생 ▶️</button>
-                <button class="btn-delete" id="del-chorus" onclick="deleteTrack('chorus')" disabled>삭제 🗑️</button>
+                <button class="btn-stop" onclick="cancelRecording()" disabled>취소 ⬛</button>
+                <button class="btn-play" onclick="playTrack('chorus')" disabled>재생 ▶️</button>
+                <button class="btn-delete" onclick="deleteTrack('chorus')" disabled>삭제 🗑️</button>
             </div>
-            <audio id="audio-chorus" onended="stopVisualizer('chorus')"></audio>
         </div>
 
         <!-- Melody -->
         <div class="pad melody" id="pad-melody">
             <div class="recording-indicator"></div>
             <h2>🎵 메인 멜로디</h2>
+            <div class="status"></div>
             <canvas id="canvas-melody"></canvas>
             <div class="volume-control">
                 🔊 <input type="range" id="vol-melody" min="0" max="1" step="0.05" value="1" oninput="changeVolume('melody', this.value)">
             </div>
             <div class="controls">
                 <button class="btn-record" onclick="startRecording('melody')">녹음 🔴</button>
-                <button class="btn-stop" onclick="stopRecording('melody')" disabled>정지 ⬛</button>
-                <button class="btn-play" id="play-melody" onclick="playTrack('melody')" disabled>재생 ▶️</button>
-                <button class="btn-delete" id="del-melody" onclick="deleteTrack('melody')" disabled>삭제 🗑️</button>
+                <button class="btn-stop" onclick="cancelRecording()" disabled>취소 ⬛</button>
+                <button class="btn-play" onclick="playTrack('melody')" disabled>재생 ▶️</button>
+                <button class="btn-delete" onclick="deleteTrack('melody')" disabled>삭제 🗑️</button>
             </div>
-            <audio id="audio-melody" onended="stopVisualizer('melody')"></audio>
         </div>
     </div>
 
     <div class="global-controls">
-        <button class="btn-global-play" onclick="playAll()">전체 동시 재생 🌟</button>
+        <button class="btn-global-play" id="btn-global-play" onclick="playAll()">전체 동시 재생 🌟</button>
         <button class="btn-global-stop" onclick="stopAll()">전체 정지 ✋</button>
     </div>
 
     <footer>Made by. 엽쌤</footer>
 
     <script>
-        let stream;
-        const tracks = { beatbox: null, bass: null, chorus: null, melody: null };
-        const trackBlobs = { beatbox: null, bass: null, chorus: null, melody: null }; 
-        const visualizers = { beatbox: null, bass: null, chorus: null, melody: null };
         const parts = ['beatbox', 'bass', 'chorus', 'melody'];
-        
-        let audioCtx;
-        let metronomeInterval;
-        let isMetronomeOn = false;
-        let bpm = 120;
+        const BEATS_PER_BAR = 4;
+        const MIX_REPEATS = 4;          // 다운로드 음원에 루프를 몇 번 반복할지
+        const LOOKAHEAD = 0.1;          // 메트로놈 예약 구간(초)
 
-        // 기기 지원 포맷 감지 (iOS 사파리 대응)
-        const getSupportedMimeType = () => {
-            const types = ['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/aac'];
-            for (let type of types) {
-                if (MediaRecorder.isTypeSupported(type)) return type;
-            }
-            return ''; 
-        };
+        const buffers = { beatbox: null, bass: null, chorus: null, melody: null };  // 녹음된 AudioBuffer
+        const peaks = { beatbox: null, bass: null, chorus: null, melody: null };    // 파형 미리보기
+        const sources = { beatbox: null, bass: null, chorus: null, melody: null };  // 재생 중인 소스
+        const gains = {};
+
+        let audioCtx, master;
+        let bpm = 120;
+        let bars = 4;
+
+        // 박자 기준점: 루프(및 메트로놈 1박)가 시작되는 AudioContext 시각
+        let clockOrigin = 0;
+        let transportRunning = false;
+
+        let isMetronomeOn = false;
+        let metroTimer = null;
+        let nextBeatIndex = 0;
+
+        // 녹음 상태
+        let mic = null;        // { stream, source, analyser, capture }
+        let rec = null;        // { part, countInStart, startTime, startFrame, data, filled, forceClick }
+        let workletReady = null;
+
+        const isSupported = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia &&
+                               (window.AudioContext || window.webkitAudioContext));
 
         const bpmSlider = document.getElementById('bpmSlider');
         const bpmValue = document.getElementById('bpmValue');
+        const barsSelect = document.getElementById('barsSelect');
         const metroToggle = document.getElementById('metroToggle');
 
+        const beatDur = () => 60 / bpm;
+        const barDur = () => beatDur() * BEATS_PER_BAR;
+        const loopDur = () => barDur() * bars;
+        const hasAnyTrack = () => parts.some(p => buffers[p]);
+
         bpmSlider.addEventListener('input', (e) => {
-            bpm = e.target.value;
+            bpm = Number(e.target.value);
             bpmValue.textContent = bpm;
-            if(isMetronomeOn) {
-                toggleMetronome(); 
-                toggleMetronome(); 
-            }
+            if (isMetronomeOn && !transportRunning) resetClock(audioCtx.currentTime + 0.05);
+            saveSettings();
+        });
+
+        barsSelect.addEventListener('change', (e) => {
+            bars = Number(e.target.value);
+            saveSettings();
         });
 
         metroToggle.addEventListener('click', toggleMetronome);
 
         function initAudioCtx() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                // 4개 파트를 합쳐도 소리가 깨지지 않도록 컴프레서를 거쳐 출력
+                const comp = audioCtx.createDynamicsCompressor();
+                comp.threshold.value = -6;
+                comp.ratio.value = 8;
+                master = audioCtx.createGain();
+                master.connect(comp);
+                comp.connect(audioCtx.destination);
+                parts.forEach(part => {
+                    gains[part] = audioCtx.createGain();
+                    gains[part].gain.value = document.getElementById(`vol-${part}`).value;
+                    gains[part].connect(master);
+                });
+            }
+            // iOS/Safari 정책 상 User Gesture 직후에 AudioContext Resume 필요
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            setAudioSession(mic ? 'play-and-record' : 'playback');
         }
 
-        // 아이패드에서 클릭음 명확하게 들리도록 개선
-        function playClick() {
-            if(!audioCtx) return;
+        // iOS 17+ : 무음 스위치가 켜져 있어도 소리가 나도록 오디오 세션 지정
+        function setAudioSession(type) {
+            try { if (navigator.audioSession) navigator.audioSession.type = type; } catch (e) {}
+        }
+
+        // --- 메트로놈 (AudioContext 시계 기준으로 예약해서 박이 밀리지 않음) ---
+        function scheduleClick(time, accent) {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            
-            // 박자감 살리기 위한 주파수 
-            osc.frequency.setValueAtTime(800, audioCtx.currentTime); 
-            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+            gain.connect(audioCtx.destination);   // 메트로놈은 믹스(다운로드)에 들어가지 않음
 
-            gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-            
-            osc.start(audioCtx.currentTime);
-            osc.stop(audioCtx.currentTime + 0.1);
+            // 1박(강박)은 높은 소리로 구분
+            osc.frequency.setValueAtTime(accent ? 1500 : 800, time);
+            osc.frequency.exponentialRampToValueAtTime(100, time + 0.1);
+
+            gain.gain.setValueAtTime(accent ? 1 : 0.6, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+
+            osc.start(time);
+            osc.stop(time + 0.1);
+        }
+
+        function shouldClick(time) {
+            if (isMetronomeOn) return true;
+            if (!rec) return false;
+            if (time < rec.startTime) return true;   // 카운트인은 항상 들려줌
+            return rec.forceClick;                   // 첫 트랙 녹음 시에는 박자 기준이 필요
+        }
+
+        function resetClock(origin) {
+            clockOrigin = origin;
+            nextBeatIndex = Math.ceil((audioCtx.currentTime - clockOrigin) / beatDur() - 1e-6);
+        }
+
+        function metroTick() {
+            const until = audioCtx.currentTime + LOOKAHEAD;
+            while (true) {
+                const t = clockOrigin + nextBeatIndex * beatDur();
+                if (t >= until) break;
+                if (t >= audioCtx.currentTime - 0.01 && shouldClick(t)) {
+                    const beatInBar = ((nextBeatIndex % BEATS_PER_BAR) + BEATS_PER_BAR) % BEATS_PER_BAR;
+                    scheduleClick(Math.max(t, audioCtx.currentTime), beatInBar === 0);
+                }
+                nextBeatIndex++;
+            }
+        }
+
+        function updateMetroTimer() {
+            const needed = isMetronomeOn || !!rec;
+            if (needed && !metroTimer) {
+                metroTick();
+                metroTimer = setInterval(metroTick, 25);
+            } else if (!needed && metroTimer) {
+                clearInterval(metroTimer);
+                metroTimer = null;
+            }
         }
 
         function toggleMetronome() {
             initAudioCtx();
+            isMetronomeOn = !isMetronomeOn;
             if (isMetronomeOn) {
-                clearInterval(metronomeInterval);
-                metroToggle.textContent = '메트로놈 켜기 ⏱️';
-                metroToggle.style.background = '#ffa502';
-                isMetronomeOn = false;
-            } else {
-                const interval = 60000 / bpm;
-                playClick();
-                metronomeInterval = setInterval(playClick, interval);
+                if (!transportRunning && !rec) resetClock(audioCtx.currentTime + 0.05);
                 metroToggle.textContent = '메트로놈 끄기 🛑';
                 metroToggle.style.background = '#ff4757';
-                isMetronomeOn = true;
+            } else {
+                metroToggle.textContent = '메트로놈 켜기 ⏱️';
+                metroToggle.style.background = '#ffa502';
+            }
+            updateMetroTimer();
+        }
+
+        // --- 재생 (Web Audio: 모든 파트가 같은 시각에 시작하고 무한 반복) ---
+        function startSource(part, when, offset) {
+            const src = audioCtx.createBufferSource();
+            src.buffer = buffers[part];
+            src.loop = true;
+            src.connect(gains[part]);
+            src.start(when, offset);
+            sources[part] = src;
+        }
+
+        function stopSource(part) {
+            if (sources[part]) {
+                try { sources[part].stop(); } catch (e) {}
+                sources[part].disconnect();
+                sources[part] = null;
             }
         }
 
-        async function getMicStream() {
-            if (!stream) {
-                try {
-                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                } catch (err) {
-                    alert("마이크 접근 권한이 필요합니다! 설정에서 권한을 허용해주세요.");
-                    console.error(err);
-                    return null;
-                }
-            }
-            return stream;
+        function startTransport(when, partList) {
+            resetClock(when);
+            transportRunning = true;
+            partList.forEach(part => startSource(part, when, 0));
+        }
+
+        function stopTransport() {
+            parts.forEach(stopSource);
+            transportRunning = false;
         }
 
         function changeVolume(part, val) {
-            const audio = document.getElementById(`audio-${part}`);
-            if(audio) audio.volume = val;
+            if (gains[part]) gains[part].gain.value = val;
         }
 
-        async function startRecording(part) {
-            initAudioCtx();
-            const micStream = await getMicStream();
-            if(!micStream) return;
-
-            const pad = document.getElementById(`pad-${part}`);
-            pad.classList.add('is-recording');
-
-            pad.querySelector('.btn-record').disabled = true;
-            pad.querySelector('.btn-stop').disabled = false;
-            pad.querySelector('.btn-play').disabled = true;
-            pad.querySelector('.btn-delete').disabled = true;
-
-            const mimeType = getSupportedMimeType();
-            const options = mimeType ? { mimeType } : {};
-            const mediaRecorder = new MediaRecorder(micStream, options);
-            const chunks = [];
-
-            mediaRecorder.ondataavailable = e => {
-                if (e.data.size > 0) chunks.push(e.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(chunks, { type: mimeType || 'audio/webm' }); 
-                trackBlobs[part] = blob; 
-                
-                const audioURL = URL.createObjectURL(blob);
-                const audioEl = document.getElementById(`audio-${part}`);
-                audioEl.src = audioURL;
-                audioEl.volume = document.getElementById(`vol-${part}`).value; 
-                
-                tracks[part] = { recorder: null, hasAudio: true };
-                
-                pad.classList.remove('is-recording');
-                pad.querySelector('.btn-record').disabled = false;
-                pad.querySelector('.btn-stop').disabled = true;
-                pad.querySelector('.btn-play').disabled = false;
-                pad.querySelector('.btn-delete').disabled = false;
-                
-                stopVisualizer(part);
-            };
-
-            tracks[part] = { recorder: mediaRecorder, hasAudio: false };
-            mediaRecorder.start();
-            startVisualizer(part);
-        }
-
-        function stopRecording(part) {
-            if (tracks[part] && tracks[part].recorder && tracks[part].recorder.state !== "inactive") {
-                tracks[part].recorder.stop();
-            }
-        }
-
+        // 파트 재생 버튼: 이미 반복 재생 중이면 박자에 맞춰 그 파트를 켜고/끔
         function playTrack(part) {
-            const audio = document.getElementById(`audio-${part}`);
-            if (audio.src) {
-                audio.currentTime = 0;
-                audio.play();
-                startVisualizer(part);
+            if (!buffers[part] || rec) return;
+            initAudioCtx();
+            if (sources[part]) {
+                stopSource(part);
+                if (!parts.some(p => sources[p])) transportRunning = false;
+            } else if (transportRunning) {
+                const when = audioCtx.currentTime + 0.02;
+                const offset = ((when - clockOrigin) % loopDur() + loopDur()) % loopDur();
+                startSource(part, when, offset);
+            } else {
+                startTransport(audioCtx.currentTime + 0.05, [part]);
             }
-        }
-
-        function deleteTrack(part) {
-            document.getElementById(`audio-${part}`).src = "";
-            tracks[part] = null;
-            trackBlobs[part] = null;
-            
-            const pad = document.getElementById(`pad-${part}`);
-            pad.querySelector('.btn-play').disabled = true;
-            pad.querySelector('.btn-delete').disabled = true;
-            stopVisualizer(part);
+            updateUI();
         }
 
         function playAll() {
-            if(isMetronomeOn) toggleMetronome();
-
-            // iOS/Safari 정책 상 User Gesture 직후에 AudioContext Resume 필요
-            if (audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-
-            parts.forEach(part => {
-                const audio = document.getElementById(`audio-${part}`);
-                if (tracks[part] && tracks[part].hasAudio) {
-                    audio.currentTime = 0;
-                    audio.play();
-                    startVisualizer(part);
-                }
-            });
+            if (rec || !hasAnyTrack()) return;
+            initAudioCtx();
+            stopTransport();
+            startTransport(audioCtx.currentTime + 0.05, parts.filter(p => buffers[p]));
+            updateUI();
         }
 
         function stopAll() {
-            parts.forEach(part => {
-                const audio = document.getElementById(`audio-${part}`);
-                if (!audio.paused) {
-                    audio.pause();
-                    audio.currentTime = 0;
-                    stopVisualizer(part);
-                }
-            });
+            if (rec) cancelRecording();
+            stopTransport();
+            updateUI();
         }
 
-        // --- 안전하게 개선된 WAV 믹스다운 로직 ---
+        function deleteTrack(part) {
+            if (rec) return;
+            if (!confirm('이 파트의 녹음을 삭제할까요?')) return;
+            stopSource(part);
+            if (!parts.some(p => sources[p])) transportRunning = false;
+            buffers[part] = null;
+            peaks[part] = null;
+            dbDelete(part);
+            updateUI();
+        }
+
+        // --- 녹음 ---
+        const CAPTURE_WORKLET = `
+            class CaptureProcessor extends AudioWorkletProcessor {
+                constructor() { super(); this.on = false; this.port.onmessage = e => { this.on = e.data; }; }
+                process(inputs) {
+                    const ch = inputs[0] && inputs[0][0];
+                    if (this.on && ch) this.port.postMessage({ frame: currentFrame, data: ch.slice(0) });
+                    return true;
+                }
+            }
+            registerProcessor('capture-processor', CaptureProcessor);`;
+
+        async function createCaptureNode() {
+            if (audioCtx.audioWorklet) {
+                try {
+                    if (!workletReady) {
+                        const url = URL.createObjectURL(new Blob([CAPTURE_WORKLET], { type: 'application/javascript' }));
+                        workletReady = audioCtx.audioWorklet.addModule(url);
+                    }
+                    await workletReady;
+                    const node = new AudioWorkletNode(audioCtx, 'capture-processor', { numberOfOutputs: 1 });
+                    node.port.onmessage = e => onCaptured(e.data.frame, e.data.data);
+                    return { node, setOn: on => node.port.postMessage(on) };
+                } catch (e) {
+                    console.warn('AudioWorklet 사용 불가, ScriptProcessor로 대체합니다.', e);
+                    workletReady = null;
+                }
+            }
+            // 구형 브라우저용 대체 방식
+            const size = 2048;
+            const node = audioCtx.createScriptProcessor(size, 1, 1);
+            let on = false;
+            node.onaudioprocess = e => {
+                if (!on) return;
+                const frame = Math.round(e.playbackTime * audioCtx.sampleRate) - size;
+                onCaptured(frame, e.inputBuffer.getChannelData(0).slice(0));
+            };
+            return { node, setOn: v => { on = v; } };
+        }
+
+        async function openMic() {
+            if (mic) return mic;
+            let stream;
+            try {
+                // 통화용 음성 처리(에코·잡음 제거, 자동 음량)는 비트박스와 저음을 깎으므로 끔
+                stream = await navigator.mediaDevices.getUserMedia({
+                    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+                });
+            } catch (err) {
+                alert("마이크 접근 권한이 필요합니다! 설정에서 권한을 허용해주세요.");
+                console.error(err);
+                return null;
+            }
+            setAudioSession('play-and-record');
+            const source = audioCtx.createMediaStreamSource(stream);
+            const analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 256;
+            source.connect(analyser);
+
+            const capture = await createCaptureNode();
+            const silent = audioCtx.createGain();
+            silent.gain.value = 0;
+            source.connect(capture.node);
+            capture.node.connect(silent);
+            silent.connect(audioCtx.destination);
+
+            mic = { stream, source, analyser, capture, silent };
+            return mic;
+        }
+
+        // 녹음이 끝나면 마이크를 꺼서 브라우저의 마이크 사용 표시를 없앰
+        function closeMic() {
+            if (!mic) return;
+            mic.capture.setOn(false);
+            mic.source.disconnect();
+            mic.capture.node.disconnect();
+            mic.silent.disconnect();
+            mic.stream.getTracks().forEach(t => t.stop());
+            mic = null;
+            setAudioSession('playback');
+        }
+
+        async function startRecording(part) {
+            if (rec || !isSupported) return;
+            if (buffers[part] && !confirm('이미 녹음된 파트입니다. 다시 녹음할까요?')) return;
+            initAudioCtx();
+            stopTransport();
+
+            const m = await openMic();
+            if (!m) return;
+
+            const others = parts.filter(p => p !== part && buffers[p]);
+            const countInStart = audioCtx.currentTime + 0.1;
+            const startTime = countInStart + barDur();       // 1마디 카운트인 뒤 녹음 시작
+
+            // 들리는 소리(출력 지연)에 맞춰 부른 목소리가 다시 들어오기까지(입력 지연)의 시간만큼 보정
+            const trackLatency = m.stream.getAudioTracks()[0].getSettings().latency || 0;
+            const latency = (audioCtx.outputLatency || 0) + (audioCtx.baseLatency || 0) + trackLatency;
+            const sr = audioCtx.sampleRate;
+
+            rec = {
+                part, countInStart, startTime,
+                startFrame: Math.round((startTime + latency) * sr),
+                data: new Float32Array(Math.round(loopDur() * sr)),
+                filled: 0,
+                forceClick: others.length === 0,
+            };
+
+            // 다른 파트는 녹음 시작 시각에 맞춰 반복 재생 (오버더빙)
+            startTransport(startTime, others);
+            m.capture.setOn(true);
+            updateMetroTimer();
+            updateUI();
+        }
+
+        function onCaptured(frame, chunk) {
+            if (!rec) return;
+            const from = Math.max(frame, rec.startFrame);
+            const to = Math.min(frame + chunk.length, rec.startFrame + rec.data.length);
+            if (to > from) {
+                rec.data.set(chunk.subarray(from - frame, to - frame), from - rec.startFrame);
+                rec.filled = to - rec.startFrame;
+            }
+            if (rec.filled >= rec.data.length) finishRecording();
+        }
+
+        function finishRecording() {
+            const { part, data } = rec;
+            const buffer = audioCtx.createBuffer(1, data.length, audioCtx.sampleRate);
+            buffer.copyToChannel(data, 0);
+            setTrack(part, buffer);
+            dbSave(part, data, audioCtx.sampleRate);
+            endRecording();
+        }
+
+        function cancelRecording() {
+            if (!rec) return;
+            endRecording();
+        }
+
+        function endRecording() {
+            rec = null;
+            closeMic();
+            stopTransport();
+            if (isMetronomeOn) resetClock(audioCtx.currentTime + 0.05);
+            updateMetroTimer();
+            updateUI();
+        }
+
+        function setTrack(part, buffer) {
+            buffers[part] = buffer;
+            const data = buffer.getChannelData(0);
+            const bins = 120, step = Math.floor(data.length / bins) || 1;
+            const p = new Float32Array(bins);
+            for (let i = 0; i < bins; i++) {
+                let max = 0;
+                for (let j = i * step, end = Math.min(data.length, (i + 1) * step); j < end; j++) {
+                    const v = Math.abs(data[j]);
+                    if (v > max) max = v;
+                }
+                p[i] = max;
+            }
+            peaks[part] = p;
+        }
+
+        // --- 화면 상태 ---
+        function updateUI() {
+            const any = hasAnyTrack();
+            parts.forEach(part => {
+                const pad = document.getElementById(`pad-${part}`);
+                const recordingThis = rec && rec.part === part;
+                pad.classList.toggle('is-recording', !!recordingThis);
+                pad.querySelector('.btn-record').disabled = !isSupported || !!rec;
+                pad.querySelector('.btn-stop').disabled = !recordingThis;
+                const playBtn = pad.querySelector('.btn-play');
+                playBtn.disabled = !buffers[part] || !!rec;
+                playBtn.textContent = sources[part] && !rec ? '멈춤 ⏸️' : '재생 ▶️';
+                pad.querySelector('.btn-delete').disabled = !buffers[part] || !!rec;
+            });
+            // 녹음된 파트가 있으면 루프 길이가 바뀌지 않도록 BPM/길이 잠금
+            const locked = any || !!rec;
+            bpmSlider.disabled = locked;
+            barsSelect.disabled = locked;
+            document.getElementById('lockHint').textContent = locked
+                ? '🔒 모든 파트의 박자를 맞추기 위해 BPM과 길이가 고정되었습니다. (모든 녹음을 삭제하면 변경 가능)'
+                : '녹음을 누르면 "하나, 둘, 셋, 넷" 카운트인 후 녹음이 시작되고, 정해진 길이가 되면 자동으로 끝나요.';
+            document.getElementById('btn-download').disabled = !any || !!rec;
+            document.getElementById('btn-global-play').disabled = !any || !!rec;
+        }
+
+        function statusText(part) {
+            if (rec && rec.part === part) {
+                const now = audioCtx.currentTime;
+                if (now < rec.startTime) {
+                    const beat = Math.floor((now - rec.countInStart) / beatDur()) + 1;
+                    return beat >= 1 ? `카운트인 ${beat} / ${BEATS_PER_BAR}` : '준비...';
+                }
+                const bar = Math.min(bars, Math.floor((now - rec.startTime) / barDur()) + 1);
+                return `🔴 녹음 중 ${bar} / ${bars}마디`;
+            }
+            if (sources[part]) return '🔁 반복 재생 중';
+            if (buffers[part]) return `✅ 녹음 완료 (${bars}마디)`;
+            return '녹음 전';
+        }
+
+        // --- 시각화: 녹음 중에는 실제 마이크 입력, 녹음 후에는 파형과 재생 위치 표시 ---
+        function sizeCanvas(canvas) {
+            const dpr = window.devicePixelRatio || 1;
+            const w = Math.round(canvas.offsetWidth * dpr), h = Math.round(canvas.offsetHeight * dpr);
+            if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+        }
+
+        const levelData = new Uint8Array(128);
+
+        function drawPad(part) {
+            const canvas = document.getElementById(`canvas-${part}`);
+            sizeCanvas(canvas);
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width, H = canvas.height;
+            ctx.clearRect(0, 0, W, H);
+
+            if (rec && rec.part === part && mic) {
+                mic.analyser.getByteFrequencyData(levelData);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                const n = 20, gap = 2, barW = W / n - gap;
+                for (let i = 0; i < n; i++) {
+                    const h = Math.max(2, (levelData[i * 3] / 255) * (H - 6));
+                    ctx.fillRect(i * (barW + gap), H - h, barW, h);
+                }
+                const progress = Math.max(0, Math.min(1, (audioCtx.currentTime - rec.startTime) / loopDur()));
+                ctx.fillStyle = 'rgba(231, 76, 60, 0.25)';
+                ctx.fillRect(0, 0, W * progress, H);
+                return;
+            }
+
+            if (peaks[part]) {
+                const p = peaks[part], barW = W / p.length;
+                ctx.fillStyle = sources[part] ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.25)';
+                for (let i = 0; i < p.length; i++) {
+                    const h = Math.max(1, Math.min(1, p[i] * 1.5) * (H - 6));
+                    ctx.fillRect(i * barW, (H - h) / 2, Math.max(1, barW - 1), h);
+                }
+                if (sources[part] && audioCtx) {
+                    const pos = ((audioCtx.currentTime - clockOrigin) % loopDur() + loopDur()) % loopDur() / loopDur();
+                    ctx.fillStyle = '#e74c3c';
+                    ctx.fillRect(W * pos - 1, 0, 2, H);
+                }
+                return;
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(0, H / 2);
+            ctx.lineTo(W, H / 2);
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function render() {
+            parts.forEach(part => {
+                drawPad(part);
+                const el = document.querySelector(`#pad-${part} .status`);
+                const text = statusText(part);
+                if (el.textContent !== text) el.textContent = text;
+            });
+            requestAnimationFrame(render);
+        }
+
+        // --- WAV 믹스다운 ---
         async function downloadMix() {
-            const activeParts = parts.filter(p => trackBlobs[p]);
+            const activeParts = parts.filter(p => buffers[p]);
             if(activeParts.length === 0) {
                 alert("녹음된 파트가 없습니다. 먼저 녹음을 진행해주세요!");
                 return;
@@ -399,40 +716,33 @@
             btn.disabled = true;
 
             try {
-                const buffers = {};
-                let maxDuration = 0.1; // 최소 렌더링 시간 보장
-                
-                for(const part of activeParts) {
-                    const arrayBuffer = await trackBlobs[part].arrayBuffer();
-                    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-                    buffers[part] = audioBuffer;
-                    if(audioBuffer.duration > maxDuration) {
-                        maxDuration = audioBuffer.duration;
-                    }
-                }
-
-                // 렌더링 길이를 maxDuration 에 맞게 설정 (버그 방지)
+                const sr = audioCtx.sampleRate;
+                const total = loopDur() * MIX_REPEATS;
                 const offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(
-                    2, 
-                    Math.ceil(audioCtx.sampleRate * maxDuration), 
-                    audioCtx.sampleRate
+                    2, Math.ceil(sr * total), sr
                 );
+                const comp = offlineCtx.createDynamicsCompressor();
+                comp.threshold.value = -6;
+                comp.ratio.value = 8;
+                comp.connect(offlineCtx.destination);
 
                 for(const part of activeParts) {
                     const source = offlineCtx.createBufferSource();
                     source.buffer = buffers[part];
-                    
+                    source.loop = true;
+
                     const gainNode = offlineCtx.createGain();
                     gainNode.gain.value = document.getElementById(`vol-${part}`).value;
 
                     source.connect(gainNode);
-                    gainNode.connect(offlineCtx.destination);
+                    gainNode.connect(comp);
                     source.start(0);
+                    source.stop(total);
                 }
 
                 const renderedBuffer = await offlineCtx.startRendering();
                 const wavBlob = audioBufferToWav(renderedBuffer);
-                
+
                 const url = URL.createObjectURL(wavBlob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -440,14 +750,15 @@
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
+                // 사파리는 다운로드가 시작되기 전에 URL을 해제하면 실패하므로 잠시 후 해제
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+
             } catch(e) {
                 console.error("믹스다운 오류:", e);
                 alert("음원 생성 중 오류가 발생했습니다. 트랙을 다시 녹음해보세요.");
             } finally {
                 btn.textContent = "음원(.wav) 다운로드 💾";
-                btn.disabled = false;
+                updateUI();
             }
         }
 
@@ -462,26 +773,26 @@
             function setUint16(data) { view.setUint16(offset, data, true); offset += 2; }
             function setUint32(data) { view.setUint32(offset, data, true); offset += 4; }
 
-            setUint32(0x46464952); 
-            setUint32(length - 8); 
-            setUint32(0x45564157); 
-            setUint32(0x20746d66); 
-            setUint32(16); 
-            setUint16(1); 
+            setUint32(0x46464952);                          // "RIFF"
+            setUint32(length - 8);                          // 파일 크기 - 8
+            setUint32(0x45564157);                          // "WAVE"
+            setUint32(0x20746d66);                          // "fmt "
+            setUint32(16);
+            setUint16(1);                                   // PCM
             setUint16(numOfChan);
             setUint32(buffer.sampleRate);
-            setUint32(buffer.sampleRate * 2 * numOfChan); 
-            setUint16(numOfChan * 2); 
-            setUint16(16); 
-            setUint32(0x61746164); 
-            setUint32(length - pos - 4); 
+            setUint32(buffer.sampleRate * 2 * numOfChan);
+            setUint16(numOfChan * 2);
+            setUint16(16);
+            setUint32(0x61746164);                          // "data"
+            setUint32(length - 44);                         // 오디오 데이터 크기
 
             for(i = 0; i < buffer.numberOfChannels; i++) channels.push(buffer.getChannelData(i));
 
             while(pos < buffer.length) {
                 for(i = 0; i < numOfChan; i++) {
                     sample = Math.max(-1, Math.min(1, channels[i][pos]));
-                    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
+                    sample = (sample < 0 ? sample * 32768 : sample * 32767) | 0;
                     view.setInt16(offset, sample, true);
                     offset += 2;
                 }
@@ -490,66 +801,84 @@
             return new Blob([bufferArray], {type: "audio/wav"});
         }
 
-        // 애니메이션 최적화
-        function startVisualizer(part) {
-            const canvas = document.getElementById(`canvas-${part}`);
-            const ctx = canvas.getContext('2d');
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
+        // --- 새로고침해도 녹음이 사라지지 않도록 브라우저(IndexedDB)에 임시 저장 ---
+        let dbPromise = null;
 
-            if (visualizers[part]) cancelAnimationFrame(visualizers[part]);
+        function openDB() {
+            if (!dbPromise) {
+                dbPromise = new Promise((resolve, reject) => {
+                    if (!window.indexedDB) return reject(new Error('IndexedDB 미지원'));
+                    const req = indexedDB.open('acapella-looper', 1);
+                    req.onupgradeneeded = () => {
+                        req.result.createObjectStore('tracks');
+                        req.result.createObjectStore('settings');
+                    };
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+            }
+            return dbPromise;
+        }
 
-            let active = true;
+        async function dbRun(store, fn) {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(store, 'readwrite');
+                const req = fn(tx.objectStore(store));
+                tx.oncomplete = () => resolve(req && req.result);
+                tx.onerror = () => reject(tx.error);
+            });
+        }
 
-            function draw() {
-                if (!active) return;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-                
-                const barWidth = (canvas.width / 20) - 2;
-                let x = 0;
-                for(let i = 0; i < 20; i++) {
-                    const height = Math.random() * (canvas.height - 10) + 10;
-                    ctx.fillRect(x, canvas.height - height, barWidth, height);
-                    x += barWidth + 2;
+        let unsavedWork = false;   // 저장에 실패하면 페이지를 떠날 때 경고
+
+        function dbSave(part, data, sampleRate) {
+            dbRun('tracks', s => s.put({ data, sampleRate }, part))
+                .then(() => saveSettings())
+                .catch(e => { console.warn('녹음 임시 저장 실패', e); unsavedWork = true; });
+        }
+
+        function dbDelete(part) {
+            dbRun('tracks', s => s.delete(part)).catch(() => {});
+        }
+
+        function saveSettings() {
+            dbRun('settings', s => s.put({ bpm, bars }, 'main')).catch(() => {});
+        }
+
+        async function restoreSession() {
+            try {
+                const settings = await dbRun('settings', s => s.get('main'));
+                if (settings) {
+                    bpm = settings.bpm; bars = settings.bars;
+                    bpmSlider.value = bpm; bpmValue.textContent = bpm; barsSelect.value = bars;
                 }
-                visualizers[part] = requestAnimationFrame(draw);
+                for (const part of parts) {
+                    const saved = await dbRun('tracks', s => s.get(part));
+                    if (!saved) continue;
+                    if (!audioCtx) initAudioCtx();
+                    const buffer = audioCtx.createBuffer(1, saved.data.length, saved.sampleRate);
+                    buffer.copyToChannel(saved.data, 0);
+                    setTrack(part, buffer);
+                }
+            } catch (e) {
+                console.warn('이전 녹음 불러오기 실패', e);
             }
-            
-            // 시각화 중지 함수 연결
-            visualizers[part] = requestAnimationFrame(draw);
-            
-            // stopVisualizer 에서 접근할 수 있도록 객체에 저장
-            visualizers[`${part}_active`] = () => { active = false; };
+            updateUI();
         }
 
-        function stopVisualizer(part) {
-            if (visualizers[part]) {
-                cancelAnimationFrame(visualizers[part]);
-                visualizers[part] = null;
-                if (visualizers[`${part}_active`]) visualizers[`${part}_active`]();
+        window.addEventListener('beforeunload', (e) => {
+            if (rec || (unsavedWork && hasAnyTrack())) {
+                e.preventDefault();
+                e.returnValue = '';
             }
-            const canvas = document.getElementById(`canvas-${part}`);
-            if(canvas) {
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                ctx.beginPath();
-                ctx.moveTo(0, canvas.height / 2);
-                ctx.lineTo(canvas.width, canvas.height / 2);
-                ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
-        }
+        });
 
         window.onload = () => {
-            parts.forEach(part => {
-                const canvas = document.getElementById(`canvas-${part}`);
-                canvas.width = canvas.offsetWidth;
-                canvas.height = canvas.offsetHeight;
-                stopVisualizer(part);
-            });
+            if (!isSupported) document.getElementById('unsupported').style.display = 'block';
+            updateUI();
+            restoreSession();
+            requestAnimationFrame(render);
         }
     </script>
 </body>
