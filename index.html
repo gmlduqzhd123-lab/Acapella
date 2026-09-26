@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아카펠라 메이커 - 엽쌤스쿨</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+            --beatbox-bg: #ffb3ba;
+            --bass-bg: #bae1ff;
+            --chorus-bg: #baffc9;
+            --melody-bg: #ffffba;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, sans-serif; }
+        
+        body { background-color: var(--bg-color); color: var(--text-color); padding: 20px; text-align: center; }
+        
+        h1 { margin-bottom: 5px; font-size: 28px; font-weight: 800; color: #2c3e50; }
+        .notice { font-size: 14px; color: #e74c3c; margin-bottom: 20px; font-weight: bold; }
+
+        .top-controls {
+            background: white; padding: 15px 20px; border-radius: 30px; 
+            display: inline-flex; align-items: center; gap: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .bpm-control { display: flex; align-items: center; gap: 10px; font-weight: bold; }
+        input[type="range"] { cursor: pointer; }
+
+        .grid-container {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; 
+            max-width: 800px; margin: 0 auto;
+        }
+
+        .pad {
+            padding: 20px; border-radius: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+            display: flex; flex-direction: column; align-items: center; position: relative;
+        }
+        
+        .pad h2 { font-size: 20px; margin-bottom: 10px; color: rgba(0,0,0,0.8); }
+        
+        .pad.beatbox { background-color: var(--beatbox-bg); }
+        .pad.bass { background-color: var(--bass-bg); }
+        .pad.chorus { background-color: var(--chorus-bg); }
+        .pad.melody { background-color: var(--melody-bg); }
+
+        canvas {
+            width: 100%; height: 60px; background: rgba(255,255,255,0.4); 
+            border-radius: 12px; margin-bottom: 10px;
+        }
+
+        .volume-control {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 15px;
+            font-size: 14px; width: 100%; padding: 0 10px;
+        }
+        .volume-control input[type="range"] { flex-grow: 1; accent-color: #333; }
+
+        .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+        button {
+            border: none; padding: 10px 16px; border-radius: 20px; font-weight: bold; 
+            font-size: 14px; cursor: pointer; transition: all 0.2s;
+        }
+        button:active { transform: scale(0.95); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-record { background: #ff4757; color: white; }
+        .btn-stop { background: #2f3542; color: white; }
+        .btn-play { background: #1e90ff; color: white; }
+        .btn-delete { background: #747d8c; color: white; }
+        .btn-metro { background: #ffa502; color: white; padding: 10px 20px; }
+        .btn-download { background: #8e44ad; color: white; padding: 10px 20px; }
+
+        .global-controls { margin-top: 40px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .btn-global-play { background: #2ed573; color: white; font-size: 16px; padding: 15px 30px; border-radius: 30px; }
+        .btn-global-stop { background: #ff6b81; color: white; font-size: 16px; padding: 15px 30px; border-radius: 30px; }
+
+        .recording-indicator {
+            position: absolute; top: 20px; right: 20px; width: 12px; height: 12px; 
+            background: #ff4757; border-radius: 50%; display: none;
+            animation: pulse 1s infinite;
+        }
+        .is-recording .recording-indicator { display: block; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        footer { margin-top: 50px; padding-bottom: 20px; color: #95a5a6; font-weight: bold; font-size: 15px; }
+
+        @media (max-width: 600px) {
+            .grid-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎤 교실 속 4채널 루퍼</h1>
+    <p class="notice">💡 녹음 시 이어폰을 꼭 착용해주세요! (스피커 소리가 들어가면 하울링이 발생합니다)</p>
+    
+    <div class="top-controls">
+        <div class="bpm-control">
+            BPM: <span id="bpmValue">120</span>
+            <input type="range" id="bpmSlider" min="60" max="180" value="120">
+        </div>
+        <button class="btn-metro" id="metroToggle">메트로놈 켜기 ⏱️</button>
+        <button class="btn-download" id="btn-download" onclick="downloadMix()">음원(.wav) 다운로드 💾</button>
+    </div>
+
+    <div class="grid-container">
+        <!-- Beatbox -->
+        <div class="pad beatbox" id="pad-beatbox">
+            <div class="recording-indicator"></div>
+            <h2>🥁 비트박스</h2>
+            <canvas id="canvas-beatbox"></canvas>
+            <div class="volume-control">
+                🔊 <input type="range" id="vol-beatbox" min="0" max="1" step="0.05" value="1" oninput="changeVolume('beatbox', this.value)">
+            </div>
+            <div class="controls">
+                <button class="btn-record" onclick="startRecording('beatbox')">녹음 🔴</button>
+                <button class="btn-stop" onclick="stopRecording('beatbox')" disabled>정지 ⬛</button>
+                <button class="btn-play" id="play-beatbox" onclick="playTrack('beatbox')" disabled>재생 ▶️</button>
+                <button class="btn-delete" id="del-beatbox" onclick="deleteTrack('beatbox')" disabled>삭제 🗑️</button>
+            </div>
+            <audio id="audio-beatbox" onended="stopVisualizer('beatbox')"></audio>
+        </div>
+
+        <!-- Bass -->
+        <div class="pad bass" id="pad-bass">
+            <div class="recording-indicator"></div>
+            <h2>🎸 베이스</h2>
+            <canvas id="canvas-bass"></canvas>
+            <div class="volume-control">
+                🔊 <input type="range" id="vol-bass" min="0" max="1" step="0.05" value="1" oninput="changeVolume('bass', this.value)">
+            </div>
+            <div class="controls">
+                <button class="btn-record" onclick="startRecording('bass')">녹음 🔴</button>
+                <button class="btn-stop" onclick="stopRecording('bass')" disabled>정지 ⬛</button>
+                <button class="btn-play" id="play-bass" onclick="playTrack('bass')" disabled>재생 ▶️</button>
+                <button class="btn-delete" id="del-bass" onclick="deleteTrack('bass')" disabled>삭제 🗑️</button>
+            </div>
+            <audio id="audio-bass" onended="stopVisualizer('bass')"></audio>
+        </div>
+
+        <!-- Chorus -->
+        <div class="pad chorus" id="pad-chorus">
+            <div class="recording-indicator"></div>
+            <h2>👥 화음(코러스)</h2>
+            <canvas id="canvas-chorus"></canvas>
+            <div class="volume-control">
+                🔊 <input type="range" id="vol-chorus" min="0" max="1" step="0.05" value="1" oninput="changeVolume('chorus', this.value)">
+            </div>
+            <div class="controls">
+                <button class="btn-record" onclick="startRecording('chorus')">녹음 🔴</button>
+                <button class="btn-stop" onclick="stopRecording('chorus')" disabled>정지 ⬛</button>
+                <button class="btn-play" id="play-chorus" onclick="playTrack('chorus')" disabled>재생 ▶️</button>
+                <button class="btn-delete" id="del-chorus" onclick="deleteTrack('chorus')" disabled>삭제 🗑️</button>
+            </div>
+            <audio id="audio-chorus" onended="stopVisualizer('chorus')"></audio>
+        </div>
+
+        <!-- Melody -->
+        <div class="pad melody" id="pad-melody">
+            <div class="recording-indicator"></div>
+            <h2>🎵 메인 멜로디</h2>
+            <canvas id="canvas-melody"></canvas>
+            <div class="volume-control">
+                🔊 <input type="range" id="vol-melody" min="0" max="1" step="0.05" value="1" oninput="changeVolume('melody', this.value)">
+            </div>
+            <div class="controls">
+                <button class="btn-record" onclick="startRecording('melody')">녹음 🔴</button>
+                <button class="btn-stop" onclick="stopRecording('melody')" disabled>정지 ⬛</button>
+                <button class="btn-play" id="play-melody" onclick="playTrack('melody')" disabled>재생 ▶️</button>
+                <button class="btn-delete" id="del-melody" onclick="deleteTrack('melody')" disabled>삭제 🗑️</button>
+            </div>
+            <audio id="audio-melody" onended="stopVisualizer('melody')"></audio>
+        </div>
+    </div>
+
+    <div class="global-controls">
+        <button class="btn-global-play" onclick="playAll()">전체 동시 재생 🌟</button>
+        <button class="btn-global-stop" onclick="stopAll()">전체 정지 ✋</button>
+    </div>
+
+    <footer>Made by. 엽쌤</footer>
+
+    <script>
+        let stream;
+        const tracks = { beatbox: null, bass: null, chorus: null, melody: null };
+        const trackBlobs = { beatbox: null, bass: null, chorus: null, melody: null }; 
+        const visualizers = { beatbox: null, bass: null, chorus: null, melody: null };
+        const parts = ['beatbox', 'bass', 'chorus', 'melody'];
+        
+        let audioCtx;
+        let metronomeInterval;
+        let isMetronomeOn = false;
+        let bpm = 120;
+
+        // 기기 지원 포맷 감지 (iOS 사파리 대응)
+        const getSupportedMimeType = () => {
+            const types = ['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/aac'];
+            for (let type of types) {
+                if (MediaRecorder.isTypeSupported(type)) return type;
+            }
+            return ''; 
+        };
+
+        const bpmSlider = document.getElementById('bpmSlider');
+        const bpmValue = document.getElementById('bpmValue');
+        const metroToggle = document.getElementById('metroToggle');
+
+        bpmSlider.addEventListener('input', (e) => {
+            bpm = e.target.value;
+            bpmValue.textContent = bpm;
+            if(isMetronomeOn) {
+                toggleMetronome(); 
+                toggleMetronome(); 
+            }
+        });
+
+        metroToggle.addEventListener('click', toggleMetronome);
+
+        function initAudioCtx() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        // 아이패드에서 클릭음 명확하게 들리도록 개선
+        function playClick() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            // 박자감 살리기 위한 주파수 
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+
+            gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function toggleMetronome() {
+            initAudioCtx();
+            if (isMetronomeOn) {
+                clearInterval(metronomeInterval);
+                metroToggle.textContent = '메트로놈 켜기 ⏱️';
+                metroToggle.style.background = '#ffa502';
+                isMetronomeOn = false;
+            } else {
+                const interval = 60000 / bpm;
+                playClick();
+                metronomeInterval = setInterval(playClick, interval);
+                metroToggle.textContent = '메트로놈 끄기 🛑';
+                metroToggle.style.background = '#ff4757';
+                isMetronomeOn = true;
+            }
+        }
+
+        async function getMicStream() {
+            if (!stream) {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                } catch (err) {
+                    alert("마이크 접근 권한이 필요합니다! 설정에서 권한을 허용해주세요.");
+                    console.error(err);
+                    return null;
+                }
+            }
+            return stream;
+        }
+
+        function changeVolume(part, val) {
+            const audio = document.getElementById(`audio-${part}`);
+            if(audio) audio.volume = val;
+        }
+
+        async function startRecording(part) {
+            initAudioCtx();
+            const micStream = await getMicStream();
+            if(!micStream) return;
+
+            const pad = document.getElementById(`pad-${part}`);
+            pad.classList.add('is-recording');
+
+            pad.querySelector('.btn-record').disabled = true;
+            pad.querySelector('.btn-stop').disabled = false;
+            pad.querySelector('.btn-play').disabled = true;
+            pad.querySelector('.btn-delete').disabled = true;
+
+            const mimeType = getSupportedMimeType();
+            const options = mimeType ? { mimeType } : {};
+            const mediaRecorder = new MediaRecorder(micStream, options);
+            const chunks = [];
+
+            mediaRecorder.ondataavailable = e => {
+                if (e.data.size > 0) chunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks, { type: mimeType || 'audio/webm' }); 
+                trackBlobs[part] = blob; 
+                
+                const audioURL = URL.createObjectURL(blob);
+                const audioEl = document.getElementById(`audio-${part}`);
+                audioEl.src = audioURL;
+                audioEl.volume = document.getElementById(`vol-${part}`).value; 
+                
+                tracks[part] = { recorder: null, hasAudio: true };
+                
+                pad.classList.remove('is-recording');
+                pad.querySelector('.btn-record').disabled = false;
+                pad.querySelector('.btn-stop').disabled = true;
+                pad.querySelector('.btn-play').disabled = false;
+                pad.querySelector('.btn-delete').disabled = false;
+                
+                stopVisualizer(part);
+            };
+
+            tracks[part] = { recorder: mediaRecorder, hasAudio: false };
+            mediaRecorder.start();
+            startVisualizer(part);
+        }
+
+        function stopRecording(part) {
+            if (tracks[part] && tracks[part].recorder && tracks[part].recorder.state !== "inactive") {
+                tracks[part].recorder.stop();
+            }
+        }
+
+        function playTrack(part) {
+            const audio = document.getElementById(`audio-${part}`);
+            if (audio.src) {
+                audio.currentTime = 0;
+                audio.play();
+                startVisualizer(part);
+            }
+        }
+
+        function deleteTrack(part) {
+            document.getElementById(`audio-${part}`).src = "";
+            tracks[part] = null;
+            trackBlobs[part] = null;
+            
+            const pad = document.getElementById(`pad-${part}`);
+            pad.querySelector('.btn-play').disabled = true;
+            pad.querySelector('.btn-delete').disabled = true;
+            stopVisualizer(part);
+        }
+
+        function playAll() {
+            if(isMetronomeOn) toggleMetronome();
+
+            // iOS/Safari 정책 상 User Gesture 직후에 AudioContext Resume 필요
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            parts.forEach(part => {
+                const audio = document.getElementById(`audio-${part}`);
+                if (tracks[part] && tracks[part].hasAudio) {
+                    audio.currentTime = 0;
+                    audio.play();
+                    startVisualizer(part);
+                }
+            });
+        }
+
+        function stopAll() {
+            parts.forEach(part => {
+                const audio = document.getElementById(`audio-${part}`);
+                if (!audio.paused) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    stopVisualizer(part);
+                }
+            });
+        }
+
+        // --- 안전하게 개선된 WAV 믹스다운 로직 ---
+        async function downloadMix() {
+            const activeParts = parts.filter(p => trackBlobs[p]);
+            if(activeParts.length === 0) {
+                alert("녹음된 파트가 없습니다. 먼저 녹음을 진행해주세요!");
+                return;
+            }
+
+            initAudioCtx();
+            const btn = document.getElementById('btn-download');
+            btn.textContent = "믹스다운 중... ⏳";
+            btn.disabled = true;
+
+            try {
+                const buffers = {};
+                let maxDuration = 0.1; // 최소 렌더링 시간 보장
+                
+                for(const part of activeParts) {
+                    const arrayBuffer = await trackBlobs[part].arrayBuffer();
+                    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                    buffers[part] = audioBuffer;
+                    if(audioBuffer.duration > maxDuration) {
+                        maxDuration = audioBuffer.duration;
+                    }
+                }
+
+                // 렌더링 길이를 maxDuration 에 맞게 설정 (버그 방지)
+                const offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(
+                    2, 
+                    Math.ceil(audioCtx.sampleRate * maxDuration), 
+                    audioCtx.sampleRate
+                );
+
+                for(const part of activeParts) {
+                    const source = offlineCtx.createBufferSource();
+                    source.buffer = buffers[part];
+                    
+                    const gainNode = offlineCtx.createGain();
+                    gainNode.gain.value = document.getElementById(`vol-${part}`).value;
+
+                    source.connect(gainNode);
+                    gainNode.connect(offlineCtx.destination);
+                    source.start(0);
+                }
+
+                const renderedBuffer = await offlineCtx.startRendering();
+                const wavBlob = audioBufferToWav(renderedBuffer);
+                
+                const url = URL.createObjectURL(wavBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `아카펠라_완성곡_${new Date().getTime()}.wav`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+            } catch(e) {
+                console.error("믹스다운 오류:", e);
+                alert("음원 생성 중 오류가 발생했습니다. 트랙을 다시 녹음해보세요.");
+            } finally {
+                btn.textContent = "음원(.wav) 다운로드 💾";
+                btn.disabled = false;
+            }
+        }
+
+        function audioBufferToWav(buffer) {
+            let numOfChan = buffer.numberOfChannels,
+                length = buffer.length * numOfChan * 2 + 44,
+                bufferArray = new ArrayBuffer(length),
+                view = new DataView(bufferArray),
+                channels = [], i, sample,
+                offset = 0, pos = 0;
+
+            function setUint16(data) { view.setUint16(offset, data, true); offset += 2; }
+            function setUint32(data) { view.setUint32(offset, data, true); offset += 4; }
+
+            setUint32(0x46464952); 
+            setUint32(length - 8); 
+            setUint32(0x45564157); 
+            setUint32(0x20746d66); 
+            setUint32(16); 
+            setUint16(1); 
+            setUint16(numOfChan);
+            setUint32(buffer.sampleRate);
+            setUint32(buffer.sampleRate * 2 * numOfChan); 
+            setUint16(numOfChan * 2); 
+            setUint16(16); 
+            setUint32(0x61746164); 
+            setUint32(length - pos - 4); 
+
+            for(i = 0; i < buffer.numberOfChannels; i++) channels.push(buffer.getChannelData(i));
+
+            while(pos < buffer.length) {
+                for(i = 0; i < numOfChan; i++) {
+                    sample = Math.max(-1, Math.min(1, channels[i][pos]));
+                    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
+                    view.setInt16(offset, sample, true);
+                    offset += 2;
+                }
+                pos++;
+            }
+            return new Blob([bufferArray], {type: "audio/wav"});
+        }
+
+        // 애니메이션 최적화
+        function startVisualizer(part) {
+            const canvas = document.getElementById(`canvas-${part}`);
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            if (visualizers[part]) cancelAnimationFrame(visualizers[part]);
+
+            let active = true;
+
+            function draw() {
+                if (!active) return;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                
+                const barWidth = (canvas.width / 20) - 2;
+                let x = 0;
+                for(let i = 0; i < 20; i++) {
+                    const height = Math.random() * (canvas.height - 10) + 10;
+                    ctx.fillRect(x, canvas.height - height, barWidth, height);
+                    x += barWidth + 2;
+                }
+                visualizers[part] = requestAnimationFrame(draw);
+            }
+            
+            // 시각화 중지 함수 연결
+            visualizers[part] = requestAnimationFrame(draw);
+            
+            // stopVisualizer 에서 접근할 수 있도록 객체에 저장
+            visualizers[`${part}_active`] = () => { active = false; };
+        }
+
+        function stopVisualizer(part) {
+            if (visualizers[part]) {
+                cancelAnimationFrame(visualizers[part]);
+                visualizers[part] = null;
+                if (visualizers[`${part}_active`]) visualizers[`${part}_active`]();
+            }
+            const canvas = document.getElementById(`canvas-${part}`);
+            if(canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height / 2);
+                ctx.lineTo(canvas.width, canvas.height / 2);
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        window.onload = () => {
+            parts.forEach(part => {
+                const canvas = document.getElementById(`canvas-${part}`);
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+                stopVisualizer(part);
+            });
+        }
+    </script>
+</body>
+</html>
