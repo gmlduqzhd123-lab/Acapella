@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아카펠라 스튜디오 - 엽쌤스쿨</title>
+    <meta name="description" content="혼자서 여러 성부를 쌓아 만드는 아카펠라 루프 스튜디오">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="엽쌤스쿨">
+    <meta property="og:title" content="아카펠라 스튜디오">
+    <meta property="og:description" content="혼자서 여러 성부를 쌓아 만드는 아카펠라 루프 스튜디오">
+    <meta property="og:url" content="https://gmlduqzhd123-lab.github.io/Acapella/studio.html">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:image" content="https://gmlduqzhd123-lab.github.io/Acapella/og-image.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+    <style>
+        :root {
+            --bg: #14161c;
+            --panel: #1d2029;
+            --panel2: #272b37;
+            --line: #323746;
+            --text: #e9ecf1;
+            --muted: #8b93a7;
+            --accent: #7c6cff;
+            --rec: #ff4d5e;
+            --ok: #37d67a;
+            --warn: #ffc84a;
+            --transport-h: 74px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', sans-serif; }
+        html { -webkit-text-size-adjust: 100%; }
+        body { background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.45;
+            padding-bottom: calc(var(--transport-h) + 24px + env(safe-area-inset-bottom)); }
+        button {
+            border: none; border-radius: 10px; font-weight: 800; font-size: 14px; cursor: pointer; min-height: 40px; padding: 8px 14px;
+            color: var(--text); background: var(--panel2); touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+            user-select: none; -webkit-user-select: none; transition: transform 0.08s, background 0.15s;
+        }
+        button:active { transform: scale(0.96); }
+        button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+        select, input[type="text"], input[type="number"] {
+            background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 10px;
+            font-size: 15px; font-weight: 700; padding: 8px 10px; min-height: 40px;
+        }
+        input[type="range"] { accent-color: var(--accent); cursor: pointer; width: 100%; }
+        input:disabled, select:disabled { opacity: 0.45; cursor: not-allowed; }
+        [hidden] { display: none !important; }
+        .wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+
+        header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 16px 0 10px; }
+        header h1 { font-size: 20px; font-weight: 900; margin-right: auto; }
+        header h1 small { color: var(--muted); font-weight: 700; font-size: 13px; margin-left: 6px; }
+        .proj-name { font-size: 16px; font-weight: 800; min-width: 0; width: 220px; }
+        .warn-banner { background: #3a3218; color: var(--warn); border-radius: 12px; padding: 10px 14px; font-weight: 700; margin-bottom: 10px; }
+        .warn-banner a { color: var(--warn); }
+
+        .panel { background: var(--panel); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+        .settings { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-end; }
+        .field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 800; color: var(--muted); }
+        .field input[type="number"] { width: 84px; }
+        .toggle { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 13px; color: var(--text);
+            background: var(--panel2); border-radius: 10px; padding: 8px 10px; min-height: 40px; cursor: pointer; }
+        .toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+        .lock-note { width: 100%; color: var(--warn); font-size: 13px; font-weight: 700; }
+        .sync-field input[type="range"] { width: 140px; }
+
+        /* 트랙 */
+        .tracks { display: flex; flex-direction: column; gap: 8px; }
+        .track {
+            display: grid; grid-template-columns: 6px minmax(170px, 210px) 1fr auto; grid-template-areas: "color head wave ctrl";
+            gap: 10px; align-items: center; background: var(--panel); border-radius: 14px; padding: 10px 12px 10px 0; position: relative;
+        }
+        .track.selected { box-shadow: 0 0 0 2px var(--accent); }
+        .track.recording { box-shadow: 0 0 0 2px var(--rec); }
+        .t-color { grid-area: color; align-self: stretch; border-radius: 14px 0 0 14px; }
+        .t-head { grid-area: head; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+        .t-name { width: 100%; font-weight: 900; }
+        .t-sub { display: flex; gap: 6px; align-items: center; }
+        .t-take { flex: 1; min-width: 0; font-size: 13px; min-height: 34px; padding: 4px 6px; }
+        .nudge { display: flex; align-items: center; gap: 2px; font-size: 12px; color: var(--muted); font-weight: 800; }
+        .nudge button { min-height: 34px; padding: 4px 8px; font-size: 12px; }
+        .nudge span { min-width: 44px; text-align: center; }
+        .t-wave { grid-area: wave; height: 64px; width: 100%; background: var(--panel2); border-radius: 10px; display: block; min-width: 0; }
+        .t-ctrl { grid-area: ctrl; display: flex; flex-direction: column; gap: 6px; }
+        .t-btns { display: flex; gap: 6px; }
+        .t-btns button { min-width: 42px; padding: 6px 10px; }
+        .b-rec { color: var(--rec); font-size: 16px; }
+        .b-rec.on { background: var(--rec); color: white; }
+        .b-mute.on { background: var(--warn); color: #222; }
+        .b-solo.on { background: var(--ok); color: #111; }
+        .t-knobs { display: grid; grid-template-columns: repeat(3, 84px); gap: 6px; }
+        .t-knobs label { font-size: 11px; font-weight: 800; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
+        .add-track { width: 100%; margin-top: 8px; min-height: 48px; border: 2px dashed var(--line); background: transparent; color: var(--muted); }
+
+        .mix-row { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-end; }
+        .mix-row .field input[type="range"] { width: 160px; }
+        .btn-accent { background: var(--accent); color: white; }
+        .btn-rec { background: var(--rec); color: white; }
+        .hint { color: var(--muted); font-size: 13px; margin-top: 8px; }
+
+        /* 하단 재생 막대 */
+        .transport {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 8; background: rgba(20, 22, 28, 0.96);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-top: 1px solid var(--line);
+            padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+        }
+        .transport-inner { max-width: 1100px; margin: 0 auto; display: flex; gap: 8px; align-items: center; }
+        .tp-play { min-width: 104px; min-height: 52px; font-size: 17px; background: var(--ok); color: #111; }
+        .tp-play.playing { background: var(--text); color: #111; }
+        .tp-rec { min-width: 104px; min-height: 52px; font-size: 17px; background: var(--rec); color: white; }
+        .tp-status { flex: 1; min-width: 0; text-align: center; font-weight: 900; font-size: 15px; }
+        .tp-status .big { font-size: 24px; display: block; line-height: 1.1; }
+        .tp-status .rec-live { color: var(--rec); }
+        .tp-tool { min-height: 52px; min-width: 64px; font-size: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 8px; }
+        .tp-tool b { font-size: 18px; line-height: 1; }
+        .tp-tool.on { background: var(--accent); color: white; }
+
+        .tuner-pop {
+            position: fixed; right: 16px; bottom: calc(var(--transport-h) + 16px + env(safe-area-inset-bottom)); z-index: 9;
+            background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px; width: 240px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .tuner-note { font-size: 40px; font-weight: 900; }
+        .tuner-meter { position: relative; height: 12px; border-radius: 6px; margin: 8px 0;
+            background: linear-gradient(90deg, #ff6b6b, #ffd43b 35%, #37d67a 45%, #37d67a 55%, #ffd43b 65%, #ff6b6b); }
+        .tuner-needle { position: absolute; top: -5px; width: 6px; height: 22px; margin-left: -3px; left: 50%; border-radius: 3px; background: white; transition: left 0.08s; }
+        .tuner-msg { font-weight: 800; color: var(--muted); }
+        .tuner-pop.ok .tuner-note, .tuner-pop.ok .tuner-msg { color: var(--ok); }
+
+        /* 창 */
+        .overlay { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .dialog { background: var(--panel); border-radius: 18px; padding: 22px; width: 100%; max-width: 560px; max-height: calc(100vh - 32px); overflow-y: auto; }
+        .dialog h2 { font-size: 19px; margin-bottom: 10px; }
+        .dialog-body { margin-bottom: 16px; color: #cfd4de; }
+        .dialog-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+        .dialog-actions.column { flex-direction: column; align-items: stretch; }
+        .dialog-actions.column button { text-align: left; min-height: 48px; }
+        .btn-danger { background: var(--rec); color: white; }
+        .proj-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+        .proj-item { display: flex; align-items: center; gap: 10px; background: var(--panel2); border-radius: 12px; padding: 10px 12px; }
+        .proj-item.current { box-shadow: 0 0 0 2px var(--accent); }
+        .proj-item .info { flex: 1; min-width: 0; }
+        .proj-item .info b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .proj-item .info small { color: var(--muted); }
+        .help-list { padding-left: 18px; display: flex; flex-direction: column; gap: 8px; color: #cfd4de; margin-bottom: 14px; }
+        .kbd { display: inline-block; background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; font-size: 12px; font-weight: 800; }
+
+        .toast {
+            position: fixed; left: 50%; bottom: calc(var(--transport-h) + 24px + env(safe-area-inset-bottom)); transform: translate(-50%, 20px);
+            opacity: 0; pointer-events: none; background: var(--text); color: #111; padding: 12px 20px; border-radius: 30px; font-weight: 800;
+            transition: all 0.25s; z-index: 30; max-width: calc(100% - 32px); text-align: center;
+        }
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+        footer { color: #5f6678; font-size: 11px; text-align: center; line-height: 1.6; margin-top: 24px; padding-bottom: 12px; }
+        footer a { color: inherit; }
+
+        @media (max-width: 820px) {
+            .track { grid-template-columns: 6px 1fr; grid-template-areas: "color head" "color wave" "color ctrl"; }
+            .t-ctrl { flex-direction: row; flex-wrap: wrap; align-items: flex-end; }
+            .t-knobs { flex: 1; grid-template-columns: repeat(3, 1fr); min-width: 220px; }
+            .proj-name { width: 100%; order: 3; }
+        }
+        @media (max-width: 600px) {
+            :root { --transport-h: 116px; }
+            .transport-inner { flex-wrap: wrap; }
+            .tp-status { order: -1; flex-basis: 100%; font-size: 13px; }
+            .tp-status .big { font-size: 20px; display: inline; margin-right: 8px; }
+            .tp-play, .tp-rec { flex: 1; min-width: 0; font-size: 16px; }
+            .tp-tool { min-width: 54px; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <header>
+        <h1>🎧 아카펠라 스튜디오<small>혼자 쌓는 루프 녹음실</small></h1>
+        <input type="text" class="proj-name" id="projName" maxlength="40" aria-label="프로젝트 이름">
+        <button onclick="openProjects()">📁 프로젝트</button>
+        <button onclick="openHelp()">❓</button>
+        <button onclick="location.href='index.html'">🏫 수업 모드</button>
+    </header>
+    <div class="warn-banner" id="envWarning" hidden></div>
+
+    <section class="panel settings" id="settingsPanel">
+        <label class="field">템포 (BPM)<input type="number" id="bpmInput" min="40" max="220" step="1"></label>
+        <label class="field">박자
+            <select id="beatsSelect">
+                <option value="2">2/4</option><option value="3">3/4</option><option value="4">4/4</option><option value="6">6/8</option>
+            </select>
+        </label>
+        <label class="field">루프 길이
+            <select id="barsSelect">
+                <option value="1">1마디</option><option value="2">2마디</option><option value="4">4마디</option>
+                <option value="8">8마디</option><option value="16">16마디</option>
+            </select>
+        </label>
+        <label class="field">조 (드론·튜너)<select id="keySelect"></select></label>
+        <label class="toggle"><input type="checkbox" id="countInToggle"> 카운트인</label>
+        <label class="toggle"><input type="checkbox" id="clickRecToggle"> 녹음 중 메트로놈</label>
+        <label class="toggle" title="루프가 한 바퀴 돌 때마다 새 테이크로 계속 녹음"><input type="checkbox" id="loopRecToggle"> 연속 녹음</label>
+        <label class="field sync-field">녹음 싱크 보정 <span id="syncValue"></span><input type="range" id="syncRange" min="-150" max="150" step="5"></label>
+        <p class="lock-note" id="lockNote" hidden>🔒 녹음이 있어서 템포·박자·길이는 바꿀 수 없어요. 새 프로젝트를 만들거나 모든 테이크를 지우면 바꿀 수 있어요.</p>
+    </section>
+
+    <section class="tracks" id="trackList"></section>
+    <button class="add-track" id="addTrackBtn" onclick="addTrack()">＋ 트랙 추가</button>
+
+    <section class="panel" style="margin-top:12px">
+        <div class="mix-row">
+            <label class="field">마스터 볼륨<input type="range" id="masterRange" min="0" max="1.2" step="0.01"></label>
+            <label class="field">공간 울림 (리버브)<input type="range" id="reverbRange" min="0" max="1" step="0.01"></label>
+            <label class="field">내보내기 반복
+                <select id="repeatsSelect"><option value="1">1번</option><option value="2">2번</option><option value="4">4번</option><option value="8">8번</option></select>
+            </label>
+            <button class="btn-accent" id="exportMixBtn" onclick="exportMix()">⬇️ 믹스 WAV</button>
+            <button id="exportStemsBtn" onclick="exportStems()">⬇️ 트랙별 WAV</button>
+        </div>
+        <p class="hint">믹스는 볼륨·좌우·울림·뮤트/솔로가 그대로 반영돼요. 트랙별 WAV는 울림 없이 볼륨·좌우만 반영된 파일이 트랙 수만큼 받아져요.</p>
+    </section>
+
+    <footer>
+        엽쌤스쿨 · <a href="index.html">수업용 4채널 루퍼</a> · <a href="https://gmlduqzhd123-lab.github.io/YScode/">엽쌤의 다른 앱 보기 →</a><br>
+        © 2026 엽쌤스쿨. All rights reserved. 이 웹앱의 디자인과 코드의 저작권은 엽쌤스쿨에 있으며, 허락 없이 복제·배포하거나 상업적으로 이용할 수 없습니다.<br>
+        직접 녹음한 음원의 권리는 녹음한 사람에게 있습니다. 녹음과 프로젝트는 이 기기의 브라우저에만 저장돼요.<br>
+        Pretendard 글꼴 © Kil Hyung-jin, SIL Open Font License 1.1
+    </footer>
+</div>
+
+<div class="transport">
+    <div class="transport-inner">
+        <button class="tp-play" id="playBtn" onclick="togglePlay()">▶ 재생</button>
+        <button class="tp-rec" id="recBtn" onclick="toggleRecord()">● 녹음</button>
+        <div class="tp-status" id="status"></div>
+        <button class="tp-tool" id="metroBtn" onclick="toggleMetronome()"><b>⏱️</b>메트로놈</button>
+        <button class="tp-tool" id="droneBtn" onclick="toggleDrone()"><b>🎵</b>드론</button>
+        <button class="tp-tool" id="tunerBtn" onclick="toggleTuner()"><b>🎯</b>튜너</button>
+    </div>
+</div>
+
+<div class="tuner-pop" id="tunerPop" hidden>
+    <div class="tuner-note" id="tunerNote">–</div>
+    <div class="tuner-meter"><div class="tuner-needle" id="tunerNeedle"></div></div>
+    <div class="tuner-msg" id="tunerMsg">소리를 내 보세요</div>
+</div>
+
+<div class="overlay" id="dialog" hidden>
+    <div class="dialog">
+        <h2 id="dialogTitle"></h2>
+        <div class="dialog-body" id="dialogBody"></div>
+        <div class="dialog-actions" id="dialogActions"></div>
+    </div>
+</div>
+
+<div class="overlay" id="projectsDialog" hidden>
+    <div class="dialog">
+        <h2>📁 프로젝트</h2>
+        <div class="proj-list" id="projList"></div>
+        <div class="dialog-actions">
+            <button onclick="closeProjects()">닫기</button>
+            <button class="btn-accent" onclick="createProject()">＋ 새 프로젝트</button>
+        </div>
+    </div>
+</div>
+
+<div class="overlay" id="helpDialog" hidden>
+    <div class="dialog">
+        <h2>🎧 아카펠라 스튜디오 사용법</h2>
+        <ol class="help-list">
+            <li><b>유선 이어폰</b>을 끼고 템포·박자·루프 길이를 정해요. (첫 녹음 뒤에는 고정돼요)</li>
+            <li>트랙을 눌러 고른 뒤 <b>● 녹음</b>. 카운트인 뒤 한 바퀴를 녹음하고, 이미 녹음한 트랙은 이어폰으로 같이 들려요.</li>
+            <li><b>연속 녹음</b>을 켜면 멈출 때까지 한 바퀴마다 새 테이크가 쌓여요. 트랙마다 최근 5개 테이크 중 마음에 드는 것을 고를 수 있어요.</li>
+            <li>녹음한 소리가 반주보다 늦게(빠르게) 들리면 <b>녹음 싱크 보정</b>을 +(−)로 옮기고 다시 녹음하세요. 이미 녹음한 트랙은 <b>◀ ▶</b>로 10ms씩 옮길 수 있어요.</li>
+            <li>볼륨·좌우·울림으로 섞고, <b>M</b>(뮤트)·<b>S</b>(솔로)로 비교해요. 완성되면 믹스 WAV나 트랙별 WAV로 내보내요.</li>
+            <li>🎵 드론은 조의 으뜸음을 계속 들려줘서 음정을 잡기 좋아요. 🎯 튜너로 음 높이를 확인하세요.</li>
+        </ol>
+        <p class="hint">단축키: <span class="kbd">Space</span> 재생/정지 · <span class="kbd">R</span> 녹음 · <span class="kbd">↑</span><span class="kbd">↓</span> 트랙 선택 · <span class="kbd">M</span> 뮤트 · <span class="kbd">S</span> 솔로 · <span class="kbd">Esc</span> 정지</p>
+        <div class="dialog-actions" style="margin-top:14px"><button class="btn-accent" onclick="closeHelp()">시작하기</button></div>
+    </div>
+</div>
+
+<input type="file" id="importInput" accept="audio/*" hidden>
+<div class="toast" id="toast"></div>
+
+<script>
+    const $ = id => document.getElementById(id);
+    const MAX_TRACKS = 12;
+    const MAX_TAKES = 5;
+    const LOOKAHEAD = 0.1;
+    const COLORS = ['#ff6b81', '#4dabf7', '#51cf66', '#fcc419', '#b197fc', '#ff922b', '#22b8cf', '#f06595', '#94d82d', '#748ffc', '#e599f7', '#ced4da'];
+    const DEFAULT_TRACKS = [
+        { name: '보이스 퍼커션', pan: 0 }, { name: '베이스', pan: 0 }, { name: '하모니 1', pan: -0.4 },
+        { name: '하모니 2', pan: 0.4 }, { name: '리드', pan: 0 },
+    ];
+    const NOTE_EN = ['C', 'C#', 'D', 'E♭', 'E', 'F', 'F#', 'G', 'A♭', 'A', 'B♭', 'B'];
+    const DO_RE = ['도', '도#', '레', '미♭', '미', '파', '파#', '솔', '라♭', '라', '시♭', '시'];
+    const pc = m => ((m % 12) + 12) % 12;
+    const mod = (a, n) => ((a % n) + n) % n;
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    const isSupported = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && (window.AudioContext || window.webkitAudioContext));
+
+    let project = null;
+    let selectedId = null;
+    const takeBuffers = new Map();   // takeId -> AudioBuffer
+    const takePeaks = new Map();     // takeId -> Float32Array
+    const nodes = new Map();         // trackId -> { mute, vol, pan, send }
+    const sources = new Map();       // trackId -> AudioBufferSourceNode
+
+    let ctx = null, masterGain = null, reverbReturn = null, convolver = null;
+    let playing = false, origin = 0;
+    let metroOn = false, metroTimer = null, nextBeat = 0;
+    let droneNodes = null;
+    let mic = null, micError = null, workletReady = null, tunerOn = false;
+    let rec = null;   // { trackId, countInStart, startTime, startFrame, len, data, filled, take }
+
+    const beatDur = () => 60 / project.bpm;
+    const barDur = () => beatDur() * project.beats;
+    const loopDur = () => barDur() * project.bars;
+    const track = id => project.tracks.find(t => t.id === id);
+    const activeTake = t => t.takes[t.active] || null;
+    const activeBuffer = t => { const tk = activeTake(t); return tk ? takeBuffers.get(tk.id) : null; };
+    const hasAnyTake = () => project.tracks.some(t => t.takes.length);
+    const anySolo = () => project.tracks.some(t => t.solo);
+    const audible = t => !t.mute && (!anySolo() || t.solo);
+
+    function makeTrack(i, def = {}) {
+        return {
+            id: uid(), name: def.name || `트랙 ${i + 1}`, color: COLORS[i % COLORS.length],
+            vol: 0.85, pan: def.pan || 0, rev: 0.3, mute: false, solo: false, nudge: 0, takes: [], active: -1,
+        };
+    }
+
+    function newProject(name) {
+        return {
+            id: uid(), name: name || `새 프로젝트 ${new Date().toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })}`,
+            bpm: 90, beats: 4, bars: 4, key: 0, countIn: true, clickRec: true, loopRec: false, syncMs: 0,
+            reverb: 0.35, master: 0.9, repeats: 4, created: Date.now(), updated: Date.now(),
+            tracks: DEFAULT_TRACKS.map((d, i) => makeTrack(i, d)),
+        };
+    }
+
+    // ---------- 오디오 그래프 ----------
+    function ensureCtx() {
+        if (!ctx) {
+            ctx = new (window.AudioContext || window.webkitAudioContext)();
+            masterGain = ctx.createGain();
+            const limiter = ctx.createDynamicsCompressor();
+            limiter.threshold.value = -3; limiter.ratio.value = 12; limiter.attack.value = 0.003; limiter.release.value = 0.2;
+            masterGain.connect(limiter);
+            limiter.connect(ctx.destination);
+            convolver = ctx.createConvolver();
+            convolver.buffer = makeImpulse(ctx, 2.4);
+            reverbReturn = ctx.createGain();
+            convolver.connect(reverbReturn);
+            reverbReturn.connect(masterGain);
+        }
+        if (ctx.state === 'suspended') ctx.resume();
+        setAudioSession(mic ? 'play-and-record' : 'playback');
+        keepScreenOn();
+        return ctx;
+    }
+
+    // 잔향용 임펄스 응답: 서서히 줄어드는 스테레오 잡음
+    function makeImpulse(ac, seconds) {
+        const len = Math.round(ac.sampleRate * seconds), ir = ac.createBuffer(2, len, ac.sampleRate);
+        for (let ch = 0; ch < 2; ch++) {
+            const d = ir.getChannelData(ch);
+            for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+        }
+        return ir;
+    }
+
+    function setAudioSession(type) {
+        try { if (navigator.audioSession) navigator.audioSession.type = type; } catch (e) {}
+    }
+
+    let wakeLock = null;
+    async function keepScreenOn() {
+        try {
+            if (!wakeLock && navigator.wakeLock && document.visibilityState === 'visible') {
+                wakeLock = await navigator.wakeLock.request('screen');
+                wakeLock.addEventListener('release', () => { wakeLock = null; });
+            }
+        } catch (e) {}
+    }
+
+    function trackNodes(t) {
+        let n = nodes.get(t.id);
+        if (!n) {
+            n = { mute: ctx.createGain(), vol: ctx.createGain(), pan: ctx.createStereoPanner(), send: ctx.createGain() };
+            n.mute.connect(n.vol); n.vol.connect(n.pan); n.pan.connect(masterGain);
+            n.vol.connect(n.send); n.send.connect(convolver);
+            nodes.set(t.id, n);
+        }
+        return n;
+    }
+
+    function applyMix() {
+        if (!ctx) return;
+        masterGain.gain.value = project.master;
+        reverbReturn.gain.value = project.reverb;
+        project.tracks.forEach(t => {
+            const n = trackNodes(t);
+            n.mute.gain.value = audible(t) ? 1 : 0;
+            n.vol.gain.value = t.vol;
+            n.pan.pan.value = t.pan;
+            n.send.gain.value = t.rev;
+        });
+    }
+
+    function removeTrackNodes(id) {
+        const n = nodes.get(id);
+        if (!n) return;
+        Object.values(n).forEach(x => x.disconnect());
+        nodes.delete(id);
+    }
+
+    // ---------- 재생 ----------
+    function startSource(t, when, loopPos) {
+        const buf = activeBuffer(t);
+        if (!buf) return;
+        stopSource(t.id);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.loop = true;
+        src.connect(trackNodes(t).mute);
+        // 트랙 밀기(nudge): +면 늦게, −면 빠르게 들리도록 재생 위치를 옮김
+        src.start(when, mod(loopPos - t.nudge / 1000, buf.duration));
+        sources.set(t.id, src);
+    }
+
+    function stopSource(id) {
+        const s = sources.get(id);
+        if (!s) return;
+        try { s.stop(); } catch (e) {}
+        s.disconnect();
+        sources.delete(id);
+    }
+
+    function startTransport(when, exceptId) {
+        applyMix();
+        origin = when;
+        playing = true;
+        project.tracks.forEach(t => { if (t.id !== exceptId) startSource(t, when, 0); });
+        resetBeats();
+        updateMetroTimer();
+    }
+
+    function stopTransport() {
+        [...sources.keys()].forEach(stopSource);
+        playing = false;
+        updateMetroTimer();
+    }
+
+    // 재생 중에 테이크·밀기 값을 바꾸면 그 트랙만 박자에 맞춰 다시 시작
+    function restartTrack(t) {
+        if (!playing || (rec && rec.trackId === t.id)) return;
+        const when = ctx.currentTime + 0.02;
+        if (activeBuffer(t)) startSource(t, when, mod(when - origin, loopDur()));
+        else stopSource(t.id);
+    }
+
+    function togglePlay() {
+        if (rec) { stopRecording(); return; }
+        ensureCtx();
+        if (playing) { stopTransport(); updateUI(); return; }
+        if (!hasAnyTake() && !metroOn) { toast('녹음된 트랙이 없어요. 트랙을 고르고 ● 녹음을 눌러 보세요'); return; }
+        startTransport(ctx.currentTime + 0.05);
+        updateUI();
+    }
+
+    // ---------- 메트로놈 ----------
+    function scheduleClick(time, accent) {
+        const osc = ctx.createOscillator(), g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.frequency.setValueAtTime(accent ? 1500 : 900, time);
+        osc.frequency.exponentialRampToValueAtTime(120, time + 0.08);
+        g.gain.setValueAtTime(accent ? 0.9 : 0.5, time);
+        g.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+        osc.start(time); osc.stop(time + 0.09);
+    }
+
+    function resetBeats() { nextBeat = Math.ceil((ctx.currentTime - origin) / beatDur() - 1e-6); }
+
+    function shouldClick(t) {
+        if (metroOn) return true;
+        if (!rec) return false;
+        return t < rec.startTime ? true : project.clickRec;
+    }
+
+    function metroTick() {
+        const until = ctx.currentTime + LOOKAHEAD;
+        while (true) {
+            const t = origin + nextBeat * beatDur();
+            if (t >= until) break;
+            if (t >= ctx.currentTime - 0.01 && shouldClick(t)) scheduleClick(Math.max(t, ctx.currentTime), mod(nextBeat, project.beats) === 0);
+            nextBeat++;
+        }
+    }
+
+    function updateMetroTimer() {
+        const need = metroOn || !!rec;
+        if (need && !metroTimer) { metroTick(); metroTimer = setInterval(metroTick, 25); }
+        else if (!need && metroTimer) { clearInterval(metroTimer); metroTimer = null; }
+    }
+
+    function toggleMetronome() {
+        ensureCtx();
+        metroOn = !metroOn;
+        if (metroOn && !playing && !rec) { origin = ctx.currentTime + 0.05; resetBeats(); }
+        updateMetroTimer();
+        updateUI();
+    }
+
+    // ---------- 드론 (조의 으뜸음을 계속 들려줌, 믹스에는 안 들어감) ----------
+    function toggleDrone() {
+        ensureCtx();
+        if (droneNodes) {
+            const { oscs, g } = droneNodes;
+            g.gain.setTargetAtTime(0, ctx.currentTime, 0.1);
+            setTimeout(() => oscs.forEach(o => o.stop()), 400);
+            droneNodes = null;
+        } else {
+            const g = ctx.createGain();
+            g.gain.value = 0;
+            g.gain.setTargetAtTime(0.12, ctx.currentTime, 0.2);
+            g.connect(ctx.destination);
+            const root = 48 + project.key;
+            const oscs = [[root, 'sine', 1], [root + 12, 'triangle', 0.4], [root + 7, 'sine', 0.3]].map(([m, type, lvl]) => {
+                const o = ctx.createOscillator(), og = ctx.createGain();
+                o.type = type; o.frequency.value = 440 * Math.pow(2, (m - 69) / 12); og.gain.value = lvl;
+                o.connect(og); og.connect(g); o.start();
+                return o;
+            });
+            droneNodes = { oscs, g };
+        }
+        updateUI();
+    }
+
+    // ---------- 녹음 ----------
+    const CAPTURE_WORKLET = `
+        class CaptureProcessor extends AudioWorkletProcessor {
+            constructor() { super(); this.on = false; this.port.onmessage = e => { this.on = e.data; }; }
+            process(inputs) {
+                const ch = inputs[0] && inputs[0][0];
+                if (this.on && ch) this.port.postMessage({ frame: currentFrame, data: ch.slice(0) });
+                return true;
+            }
+        }
+        registerProcessor('capture-processor', CaptureProcessor);`;
+
+    async function createCaptureNode() {
+        if (ctx.audioWorklet) {
+            try {
+                if (!workletReady) workletReady = ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([CAPTURE_WORKLET], { type: 'application/javascript' })));
+                await workletReady;
+                const node = new AudioWorkletNode(ctx, 'capture-processor', { numberOfOutputs: 1 });
+                node.port.onmessage = e => onCaptured(e.data.frame, e.data.data);
+                return { node, setOn: on => node.port.postMessage(on) };
+            } catch (e) {
+                console.warn('AudioWorklet 사용 불가, ScriptProcessor로 대체합니다.', e);
+                workletReady = null;
+            }
+        }
+        const size = 2048, node = ctx.createScriptProcessor(size, 1, 1);
+        let on = false;
+        node.onaudioprocess = e => { if (on) onCaptured(Math.round(e.playbackTime * ctx.sampleRate) - size, e.inputBuffer.getChannelData(0).slice(0)); };
+        return { node, setOn: v => { on = v; } };
+    }
+
+    const MIC_HELP = {
+        denied: '마이크 권한이 막혀 있어요. 주소창 옆 🔒(또는 "aA") → 마이크 "허용" 후 새로고침해 주세요.',
+        missing: '마이크를 찾지 못했어요. 이어폰 마이크 연결을 확인해 주세요.',
+        busy: '다른 앱이나 탭이 마이크를 쓰고 있어요. 닫고 다시 시도해 주세요.',
+    };
+
+    async function openMic() {
+        if (mic) return mic;
+        micError = null;
+        let stream;
+        try {
+            // 통화용 음성 처리(에코·잡음 제거, 자동 음량)는 목소리 음색과 음량을 바꾸므로 끔
+            stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+        } catch (err) {
+            const name = err && err.name;
+            micError = name === 'NotFoundError' || name === 'OverconstrainedError' ? 'missing' : name === 'NotReadableError' || name === 'AbortError' ? 'busy' : 'denied';
+            return null;
+        }
+        setAudioSession('play-and-record');
+        const source = ctx.createMediaStreamSource(stream);
+        const analyser = ctx.createAnalyser(); analyser.fftSize = 256; source.connect(analyser);
+        const pitchAnalyser = ctx.createAnalyser(); pitchAnalyser.fftSize = 2048; source.connect(pitchAnalyser);
+        const capture = await createCaptureNode();
+        const silent = ctx.createGain(); silent.gain.value = 0;
+        source.connect(capture.node); capture.node.connect(silent); silent.connect(ctx.destination);
+        mic = { stream, source, analyser, pitchAnalyser, capture, silent };
+        return mic;
+    }
+
+    function closeMic() {
+        if (!mic) return;
+        if (!rec) mic.capture.setOn(false);
+        if (rec || tunerOn) return;
+        mic.source.disconnect(); mic.capture.node.disconnect(); mic.silent.disconnect();
+        mic.stream.getTracks().forEach(t => t.stop());
+        mic = null;
+        setAudioSession('playback');
+    }
+
+    function toggleRecord() {
+        if (rec) stopRecording(); else startRecording(selectedId);
+    }
+
+    async function startRecording(trackId) {
+        if (rec || !isSupported) return;
+        const t = track(trackId);
+        if (!t) { toast('녹음할 트랙을 먼저 골라 주세요'); return; }
+        ensureCtx();
+        stopTransport();
+        const m = await openMic();
+        if (!m) { showAlert('🎤 마이크를 쓸 수 없어요', MIC_HELP[micError] || MIC_HELP.missing); return; }
+
+        const countInStart = ctx.currentTime + 0.15;
+        const startTime = countInStart + (project.countIn ? barDur() : 0);
+        // 반주가 들리는 시간(출력 지연)과 목소리가 들어오는 시간(입력 지연), 사용자가 맞춘 보정값만큼 당겨서 저장
+        const trackLatency = m.stream.getAudioTracks()[0].getSettings().latency || 0;
+        const latency = (ctx.outputLatency || 0) + (ctx.baseLatency || 0) + trackLatency + project.syncMs / 1000;
+        const sr = ctx.sampleRate, len = Math.round(loopDur() * sr);
+        rec = { trackId, countInStart, startTime, startFrame: Math.round((startTime + latency) * sr), len, data: new Float32Array(len), filled: 0, take: 0 };
+        startTransport(startTime, trackId);
+        m.capture.setOn(true);
+        updateMetroTimer();
+        updateUI();
+    }
+
+    // 캡처된 소리를 루프 길이만큼 모으고, 연속 녹음이면 다음 바퀴로 끊김 없이 이어서 받음
+    function onCaptured(frame, chunk) {
+        while (rec) {
+            const from = Math.max(frame, rec.startFrame);
+            const to = Math.min(frame + chunk.length, rec.startFrame + rec.len);
+            if (to > from) {
+                rec.data.set(chunk.subarray(from - frame, to - frame), from - rec.startFrame);
+                rec.filled = to - rec.startFrame;
+            }
+            if (rec.filled < rec.len) return;
+            finishPass();
+        }
+    }
+
+    function finishPass() {
+        const t = track(rec.trackId);
+        if (t) addTake(t, rec.data, ctx.sampleRate);
+        if (project.loopRec && t) {
+            rec = { ...rec, startFrame: rec.startFrame + rec.len, startTime: rec.startTime + loopDur(), data: new Float32Array(rec.len), filled: 0, take: rec.take + 1 };
+            toast(`🎙️ 테이크 저장! 계속 녹음 중이에요 (■ 로 멈춤)`);
+            updateUI();
+        } else {
+            endRecording();
+            toast('✅ 녹음 완료! ▶ 재생으로 들어 보세요');
+        }
+    }
+
+    function stopRecording() {
+        if (!rec) return;
+        const partial = rec.filled > 0 && rec.filled < rec.len;
+        endRecording();
+        if (partial) toast(project.loopRec ? '■ 멈췄어요. 끝까지 녹음한 테이크만 저장돼요' : '■ 녹음을 취소했어요');
+    }
+
+    function endRecording() {
+        rec = null;
+        closeMic();
+        stopTransport();
+        updateUI();
+    }
+
+    function addTake(t, data, sr) {
+        const take = { id: uid(), created: Date.now() };
+        const buf = ctx.createBuffer(1, data.length, sr);
+        buf.copyToChannel(data, 0);
+        takeBuffers.set(take.id, buf);
+        takePeaks.set(take.id, computePeaks(data));
+        t.takes.push(take);
+        while (t.takes.length > MAX_TAKES) deleteTakeData(t.takes.shift().id);
+        t.active = t.takes.length - 1;
+        dbPut('takes', { id: take.id, projectId: project.id, data, sr }).catch(e => { console.warn(e); toast('⚠️ 저장 공간이 부족해 테이크를 기기에 저장하지 못했어요'); });
+        saveProject();
+        renderTracks();
+    }
+
+    function deleteTakeData(id) {
+        takeBuffers.delete(id);
+        takePeaks.delete(id);
+        dbDelete('takes', id).catch(() => {});
+    }
+
+    function computePeaks(data) {
+        const bins = 200, step = Math.max(1, Math.floor(data.length / bins)), p = new Float32Array(bins);
+        for (let i = 0; i < bins; i++) {
+            let max = 0;
+            for (let j = i * step, e = Math.min(data.length, (i + 1) * step); j < e; j++) { const v = Math.abs(data[j]); if (v > max) max = v; }
+            p[i] = max;
+        }
+        return p;
+    }
+
+    // ---------- 트랙 조작 ----------
+    function selectTrack(id) {
+        if (selectedId === id) return;
+        selectedId = id;
+        document.querySelectorAll('.track').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
+    }
+
+    function addTrack() {
+        if (project.tracks.length >= MAX_TRACKS || rec) return;
+        const used = new Set(project.tracks.map(t => t.color));
+        const t = makeTrack(project.tracks.length);
+        t.color = COLORS.find(c => !used.has(c)) || t.color;
+        project.tracks.push(t);
+        selectedId = t.id;
+        saveProject();
+        renderTracks();
+    }
+
+    function setMute(t, v) { t.mute = v; applyMix(); saveProject(); updateTrackStates(); }
+    function setSolo(t, v) { t.solo = v; applyMix(); saveProject(); updateTrackStates(); }
+
+    function nudgeTrack(t, ms) {
+        t.nudge = Math.max(-300, Math.min(300, t.nudge + ms));
+        restartTrack(t);
+        saveProject();
+        updateTrackStates();
+    }
+
+    async function trackMenu(t) {
+        if (rec) return;
+        const res = await askDialog({
+            title: `${t.name}`, column: true,
+            buttons: [
+                { label: '📂 오디오 파일을 이 트랙으로 불러오기', value: 'import' },
+                { label: '🗑️ 지금 테이크 지우기', value: 'delTake', disabled: !activeTake(t) },
+                { label: '🧹 이 트랙의 테이크 모두 지우기', value: 'clear', disabled: !t.takes.length },
+                { label: '❌ 트랙 삭제', value: 'remove', cls: 'btn-danger' },
+                { label: '닫기', value: null },
+            ],
+        });
+        if (res === 'import') { importTarget = t.id; $('importInput').click(); }
+        else if (res === 'delTake') {
+            const tk = activeTake(t);
+            t.takes.splice(t.active, 1);
+            deleteTakeData(tk.id);
+            t.active = t.takes.length - 1;
+            restartTrack(t); saveProject(); renderTracks();
+        } else if (res === 'clear') {
+            if (!(await confirmDialog('테이크 모두 지우기', `${t.name}의 테이크 ${t.takes.length}개를 모두 지울까요?`, '지우기'))) return;
+            t.takes.forEach(tk => deleteTakeData(tk.id));
+            t.takes = []; t.active = -1;
+            restartTrack(t); saveProject(); renderTracks();
+        } else if (res === 'remove') {
+            if (t.takes.length && !(await confirmDialog('트랙 삭제', `${t.name} 트랙과 테이크를 모두 지울까요?`, '삭제'))) return;
+            stopSource(t.id);
+            t.takes.forEach(tk => deleteTakeData(tk.id));
+            removeTrackNodes(t.id);
+            project.tracks = project.tracks.filter(x => x.id !== t.id);
+            if (selectedId === t.id) selectedId = project.tracks[0] ? project.tracks[0].id : null;
+            applyMix(); saveProject(); renderTracks();
+        }
+    }
+
+    // 오디오 파일 불러오기: 모노로 합치고 루프 길이에 맞춰 자르거나 늘림
+    let importTarget = null;
+    $('importInput').addEventListener('change', async e => {
+        const f = e.target.files[0];
+        e.target.value = '';
+        const t = importTarget && track(importTarget);
+        if (!f || !t) return;
+        ensureCtx();
+        try {
+            const decoded = await ctx.decodeAudioData(await f.arrayBuffer());
+            const len = Math.round(loopDur() * ctx.sampleRate);
+            const ratio = decoded.sampleRate / ctx.sampleRate;
+            const data = new Float32Array(len);
+            const chans = [...Array(decoded.numberOfChannels)].map((_, i) => decoded.getChannelData(i));
+            for (let i = 0; i < len; i++) {
+                const j = Math.floor(i * ratio);
+                if (j >= decoded.length) break;
+                let s = 0; chans.forEach(c => { s += c[j]; });
+                data[i] = s / chans.length;
+            }
+            addTake(t, data, ctx.sampleRate);
+            restartTrack(t);
+            toast(decoded.duration > loopDur() + 0.05 ? '📂 불러왔어요 (루프 길이보다 길어서 뒷부분은 잘렸어요)' : '📂 불러왔어요');
+        } catch (err) {
+            console.error(err);
+            showAlert('불러오지 못했어요', '이 브라우저가 읽을 수 없는 파일이에요. WAV나 MP3로 바꿔서 시도해 주세요.');
+        }
+    });
+
+    // ---------- 화면 ----------
+    function renderTracks() {
+        const list = $('trackList');
+        list.innerHTML = project.tracks.map(t => `
+            <div class="track${t.id === selectedId ? ' selected' : ''}" data-id="${t.id}">
+                <div class="t-color" style="background:${t.color}"></div>
+                <div class="t-head">
+                    <input type="text" class="t-name" value="${esc(t.name)}" maxlength="20" aria-label="트랙 이름">
+                    <div class="t-sub">
+                        <select class="t-take" aria-label="테이크">${t.takes.length
+                            ? t.takes.map((tk, i) => `<option value="${i}"${i === t.active ? ' selected' : ''}>테이크 ${i + 1}${i === t.takes.length - 1 ? ' ★' : ''}</option>`).join('')
+                            : '<option>녹음 전</option>'}</select>
+                        <span class="nudge" title="트랙 밀기: 이 트랙만 앞뒤로 옮기기">
+                            <button class="b-nl" aria-label="10ms 앞으로">◀</button><span class="nv"></span><button class="b-nr" aria-label="10ms 뒤로">▶</button>
+                        </span>
+                    </div>
+                </div>
+                <canvas class="t-wave"></canvas>
+                <div class="t-ctrl">
+                    <div class="t-btns">
+                        <button class="b-rec" title="이 트랙 녹음 (R)">●</button>
+                        <button class="b-mute" title="뮤트 (M)">M</button>
+                        <button class="b-solo" title="솔로 (S)">S</button>
+                        <button class="b-more" title="더 보기" aria-label="더 보기">⋮</button>
+                    </div>
+                    <div class="t-knobs">
+                        <label>볼륨<input type="range" class="k-vol" min="0" max="1.5" step="0.01" value="${t.vol}"></label>
+                        <label>좌 · 우<input type="range" class="k-pan" min="-1" max="1" step="0.05" value="${t.pan}"></label>
+                        <label>울림<input type="range" class="k-rev" min="0" max="1" step="0.01" value="${t.rev}"></label>
+                    </div>
+                </div>
+            </div>`).join('');
+
+        list.querySelectorAll('.track').forEach(el => {
+            const t = track(el.dataset.id);
+            el.addEventListener('pointerdown', () => selectTrack(t.id));
+            el.querySelector('.t-name').addEventListener('change', e => { t.name = e.target.value.trim() || t.name; e.target.value = t.name; saveProject(); });
+            el.querySelector('.t-take').addEventListener('change', e => { t.active = Number(e.target.value); restartTrack(t); saveProject(); });
+            el.querySelector('.b-nl').onclick = () => nudgeTrack(t, -10);
+            el.querySelector('.b-nr').onclick = () => nudgeTrack(t, 10);
+            el.querySelector('.b-rec').onclick = () => { selectTrack(t.id); rec ? stopRecording() : startRecording(t.id); };
+            el.querySelector('.b-mute').onclick = () => setMute(t, !t.mute);
+            el.querySelector('.b-solo').onclick = () => setSolo(t, !t.solo);
+            el.querySelector('.b-more').onclick = () => trackMenu(t);
+            el.querySelector('.k-vol').oninput = e => { t.vol = Number(e.target.value); applyMix(); saveProject(); };
+            el.querySelector('.k-pan').oninput = e => { t.pan = Number(e.target.value); applyMix(); saveProject(); };
+            el.querySelector('.k-rev').oninput = e => { t.rev = Number(e.target.value); applyMix(); saveProject(); };
+        });
+        $('addTrackBtn').disabled = project.tracks.length >= MAX_TRACKS || !!rec;
+        $('addTrackBtn').textContent = project.tracks.length >= MAX_TRACKS ? `트랙은 최대 ${MAX_TRACKS}개까지예요` : '＋ 트랙 추가';
+        updateUI();
+    }
+
+    function updateTrackStates() {
+        document.querySelectorAll('.track').forEach(el => {
+            const t = track(el.dataset.id);
+            if (!t) return;
+            el.classList.toggle('recording', !!rec && rec.trackId === t.id);
+            el.querySelector('.b-rec').classList.toggle('on', !!rec && rec.trackId === t.id);
+            el.querySelector('.b-mute').classList.toggle('on', t.mute);
+            el.querySelector('.b-solo').classList.toggle('on', t.solo);
+            el.querySelector('.nv').textContent = `${t.nudge > 0 ? '+' : ''}${t.nudge}ms`;
+            el.querySelector('.t-take').disabled = !t.takes.length || !!rec;
+            el.querySelector('.b-more').disabled = !!rec;
+            el.querySelectorAll('.b-rec').forEach(b => b.disabled = !isSupported || (!!rec && rec.trackId !== t.id));
+        });
+    }
+
+    function updateUI() {
+        const locked = hasAnyTake() || !!rec;
+        ['bpmInput', 'beatsSelect', 'barsSelect'].forEach(id => $(id).disabled = locked);
+        $('lockNote').hidden = !hasAnyTake();
+        $('keySelect').disabled = !!droneNodes;
+        $('playBtn').textContent = playing && !rec ? '■ 정지' : '▶ 재생';
+        $('playBtn').classList.toggle('playing', playing && !rec);
+        $('recBtn').textContent = rec ? '■ 멈춤' : '● 녹음';
+        $('recBtn').disabled = !isSupported;
+        $('metroBtn').classList.toggle('on', metroOn);
+        $('droneBtn').classList.toggle('on', !!droneNodes);
+        $('tunerBtn').classList.toggle('on', tunerOn);
+        $('exportMixBtn').disabled = $('exportStemsBtn').disabled = !hasAnyTake() || !!rec;
+        $('addTrackBtn').disabled = project.tracks.length >= MAX_TRACKS || !!rec;
+        updateTrackStates();
+    }
+
+    function updateStatus() {
+        const el = $('status');
+        let html;
+        if (!ctx) html = '';
+        else if (rec) {
+            const now = ctx.currentTime, t = track(rec.trackId);
+            if (now < rec.startTime) {
+                const beat = Math.floor((now - rec.countInStart) / beatDur()) + 1;
+                html = `<span class="big">${beat >= 1 ? beat : '…'}</span>카운트인 · ${esc(t.name)}`;
+            } else {
+                const bar = Math.min(project.bars, Math.floor((now - rec.startTime) / barDur()) + 1);
+                html = `<span class="big rec-live">● REC ${bar}/${project.bars}</span>${esc(t.name)} · 테이크 ${t.takes.length + 1}${project.loopRec ? ' · 연속' : ''}`;
+            }
+        } else if (playing) {
+            const pos = mod(ctx.currentTime - origin, loopDur());
+            html = `<span class="big">${Math.floor(pos / barDur()) + 1}.${Math.floor(mod(pos, barDur()) / beatDur()) + 1}</span>${project.bpm} BPM · ${project.beats === 6 ? '6/8' : project.beats + '/4'}`;
+        } else {
+            html = `${project.bpm} BPM · ${project.beats === 6 ? '6/8' : project.beats + '/4'} · ${project.bars}마디`;
+        }
+        if (el.innerHTML !== html) el.innerHTML = html;
+    }
+
+    const levelData = new Uint8Array(128);
+    function drawTracks() {
+        const dpr = window.devicePixelRatio || 1;
+        document.querySelectorAll('.track').forEach(el => {
+            const t = track(el.dataset.id), canvas = el.querySelector('.t-wave');
+            if (!t || !canvas.offsetWidth) return;
+            const w = Math.round(canvas.offsetWidth * dpr), h = Math.round(canvas.offsetHeight * dpr);
+            if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+            const g = canvas.getContext('2d');
+            g.clearRect(0, 0, w, h);
+            // 마디 구분선
+            g.fillStyle = 'rgba(255,255,255,0.06)';
+            for (let b = 1; b < project.bars; b++) g.fillRect(Math.round(w * b / project.bars), 0, dpr, h);
+
+            if (rec && rec.trackId === t.id && mic) {
+                mic.analyser.getByteFrequencyData(levelData);
+                const prog = Math.max(0, Math.min(1, (ctx.currentTime - rec.startTime) / loopDur()));
+                g.fillStyle = 'rgba(255,77,94,0.18)';
+                g.fillRect(0, 0, w * prog, h);
+                g.fillStyle = 'rgba(255,77,94,0.8)';
+                const n = 32, bw = w / n;
+                for (let i = 0; i < n; i++) { const bh = Math.max(2, levelData[i * 2] / 255 * (h - 4)); g.fillRect(i * bw + 1, h - bh, bw - 2, bh); }
+                return;
+            }
+            const tk = activeTake(t), p = tk && takePeaks.get(tk.id);
+            if (p) {
+                const shift = t.nudge / 1000 / loopDur();
+                g.fillStyle = t.color + (audible(t) ? '' : '55');
+                const bw = w / p.length;
+                for (let i = 0; i < p.length; i++) {
+                    const bh = Math.max(dpr, Math.min(1, p[i] * 1.4) * (h - 6));
+                    g.fillRect(mod((i / p.length + shift), 1) * w, (h - bh) / 2, Math.max(dpr, bw - dpr), bh);
+                }
+            } else {
+                g.fillStyle = 'rgba(255,255,255,0.15)';
+                g.fillRect(0, h / 2, w, dpr);
+                g.fillStyle = 'rgba(255,255,255,0.35)';
+                g.font = `${12 * dpr}px Pretendard, sans-serif`;
+                g.fillText('● 를 눌러 녹음', 10 * dpr, h / 2 - 6 * dpr);
+            }
+            if (playing && ctx) {
+                g.fillStyle = '#fff';
+                g.fillRect(w * mod(ctx.currentTime - origin, loopDur()) / loopDur() - dpr, 0, 2 * dpr, h);
+            }
+        });
+    }
+
+    function frame() {
+        if (project) { drawTracks(); updateStatus(); updateTuner(); }
+        requestAnimationFrame(frame);
+    }
+
+    // ---------- 튜너 ----------
+    let tunerFrame = 0, pitchHist = [], pitchBuf = null;
+    async function toggleTuner() {
+        ensureCtx();
+        if (tunerOn) {
+            tunerOn = false; closeMic(); $('tunerPop').hidden = true; updateUI(); return;
+        }
+        const m = await openMic();
+        if (!m) { showAlert('🎤 마이크를 쓸 수 없어요', MIC_HELP[micError] || MIC_HELP.missing); return; }
+        tunerOn = true; pitchHist = []; $('tunerPop').hidden = false; updateUI();
+    }
+
+    function detectPitch(buf, sr) {
+        let size = buf.length, rms = 0;
+        for (let i = 0; i < size; i++) rms += buf[i] * buf[i];
+        if (Math.sqrt(rms / size) < 0.01) return -1;
+        let r1 = 0, r2 = size - 1;
+        for (let i = 0; i < size / 2; i++) if (Math.abs(buf[i]) < 0.2) { r1 = i; break; }
+        for (let i = 1; i < size / 2; i++) if (Math.abs(buf[size - i]) < 0.2) { r2 = size - i; break; }
+        buf = buf.subarray(r1, r2); size = buf.length;
+        const c = new Float32Array(size);
+        for (let i = 0; i < size; i++) { let s = 0; for (let j = 0; j < size - i; j++) s += buf[j] * buf[j + i]; c[i] = s; }
+        let d = 0; while (d < size - 1 && c[d] > c[d + 1]) d++;
+        let maxv = -1, T0 = -1;
+        for (let i = d; i < size; i++) if (c[i] > maxv) { maxv = c[i]; T0 = i; }
+        if (T0 <= 0 || T0 >= size - 1) return -1;
+        const x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1], a = (x1 + x3 - 2 * x2) / 2, b = (x3 - x1) / 2;
+        const f = sr / (a ? T0 - b / (2 * a) : T0);
+        return f > 60 && f < 1100 ? f : -1;
+    }
+
+    function updateTuner() {
+        if (!tunerOn || !mic || ++tunerFrame % 4) return;
+        if (!pitchBuf) pitchBuf = new Float32Array(mic.pitchAnalyser.fftSize);
+        mic.pitchAnalyser.getFloatTimeDomainData(pitchBuf);
+        const f = detectPitch(pitchBuf, ctx.sampleRate), pop = $('tunerPop');
+        if (f < 0) { pitchHist = []; pop.classList.remove('ok'); $('tunerNote').textContent = '–'; $('tunerMsg').textContent = '소리를 내 보세요'; $('tunerNeedle').style.left = '50%'; return; }
+        pitchHist.push(69 + 12 * Math.log2(f / 440));
+        if (pitchHist.length > 5) pitchHist.shift();
+        const m = [...pitchHist].sort((a, b) => a - b)[Math.floor(pitchHist.length / 2)], near = Math.round(m), cents = (m - near) * 100;
+        const ok = Math.abs(cents) <= 12;
+        pop.classList.toggle('ok', ok);
+        $('tunerNote').textContent = `${NOTE_EN[pc(near)]}${Math.floor(near / 12) - 1} · ${DO_RE[pc(near - project.key)]}`;
+        $('tunerNeedle').style.left = `${50 + Math.max(-50, Math.min(50, cents))}%`;
+        $('tunerMsg').textContent = ok ? '정확해요 🟢' : `${cents > 0 ? '+' : ''}${Math.round(cents)} cent`;
+    }
+
+    // ---------- 내보내기 ----------
+    function download(blob, name) {
+        const url = URL.createObjectURL(blob), a = document.createElement('a');
+        a.href = url; a.download = name.replace(/[\\/:*?"<>|]/g, '');
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+    }
+
+    async function renderOffline(trackList, withReverb) {
+        const sr = ctx.sampleRate, body = loopDur() * project.repeats, tail = withReverb && project.reverb > 0 ? 2.4 : 0.05;
+        const off = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(2, Math.ceil(sr * (body + tail)), sr);
+        const master = off.createGain(); master.gain.value = project.master;
+        const lim = off.createDynamicsCompressor(); lim.threshold.value = -3; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.2;
+        master.connect(lim); lim.connect(off.destination);
+        let conv = null;
+        if (withReverb) {
+            conv = off.createConvolver(); conv.buffer = makeImpulse(off, 2.4);
+            const ret = off.createGain(); ret.gain.value = project.reverb;
+            conv.connect(ret); ret.connect(master);
+        }
+        trackList.forEach(t => {
+            const buf = activeBuffer(t);
+            if (!buf) return;
+            const src = off.createBufferSource(); src.buffer = buf; src.loop = true;
+            const vol = off.createGain(); vol.gain.value = t.vol;
+            const pan = off.createStereoPanner(); pan.pan.value = t.pan;
+            src.connect(vol); vol.connect(pan); pan.connect(master);
+            if (conv) { const send = off.createGain(); send.gain.value = t.rev; vol.connect(send); send.connect(conv); }
+            src.start(0, mod(-t.nudge / 1000, buf.duration));
+            src.stop(body);
+        });
+        return audioBufferToWav(await off.startRendering());
+    }
+
+    async function exportMix() {
+        if (!hasAnyTake()) return;
+        ensureCtx();
+        const btn = $('exportMixBtn'); btn.disabled = true; btn.textContent = '만드는 중… ⏳';
+        try {
+            download(await renderOffline(project.tracks.filter(audible), true), `${project.name}_믹스.wav`);
+        } catch (e) { console.error(e); showAlert('내보내지 못했어요', '다시 시도해 주세요.'); }
+        btn.textContent = '⬇️ 믹스 WAV'; updateUI();
+    }
+
+    async function exportStems() {
+        const list = project.tracks.filter(t => activeBuffer(t));
+        if (!list.length) return;
+        ensureCtx();
+        const btn = $('exportStemsBtn'); btn.disabled = true;
+        try {
+            for (let i = 0; i < list.length; i++) {
+                btn.textContent = `만드는 중… ${i + 1}/${list.length}`;
+                download(await renderOffline([list[i]], false), `${project.name}_${String(i + 1).padStart(2, '0')}_${list[i].name}.wav`);
+                await new Promise(r => setTimeout(r, 400));
+            }
+            toast(`⬇️ 트랙 ${list.length}개를 받았어요 (브라우저가 여러 파일 받기를 물으면 허용해 주세요)`);
+        } catch (e) { console.error(e); showAlert('내보내지 못했어요', '다시 시도해 주세요.'); }
+        btn.textContent = '⬇️ 트랙별 WAV'; updateUI();
+    }
+
+    function audioBufferToWav(buffer) {
+        const nCh = buffer.numberOfChannels, length = buffer.length * nCh * 2 + 44;
+        const ab = new ArrayBuffer(length), view = new DataView(ab);
+        let offset = 0;
+        const u16 = d => { view.setUint16(offset, d, true); offset += 2; };
+        const u32 = d => { view.setUint32(offset, d, true); offset += 4; };
+        u32(0x46464952); u32(length - 8); u32(0x45564157); u32(0x20746d66); u32(16); u16(1); u16(nCh);
+        u32(buffer.sampleRate); u32(buffer.sampleRate * 2 * nCh); u16(nCh * 2); u16(16); u32(0x61746164); u32(length - 44);
+        const chans = [...Array(nCh)].map((_, i) => buffer.getChannelData(i));
+        for (let i = 0; i < buffer.length; i++) {
+            for (let c = 0; c < nCh; c++) {
+                const s = Math.max(-1, Math.min(1, chans[c][i]));
+                view.setInt16(offset, (s < 0 ? s * 32768 : s * 32767) | 0, true); offset += 2;
+            }
+        }
+        return new Blob([ab], { type: 'audio/wav' });
+    }
+
+    // ---------- 저장 (IndexedDB) ----------
+    let dbPromise = null;
+    function openDB() {
+        if (!dbPromise) dbPromise = new Promise((resolve, reject) => {
+            if (!window.indexedDB) return reject(new Error('IndexedDB 미지원'));
+            const req = indexedDB.open('acapella-studio', 1);
+            req.onupgradeneeded = () => {
+                const db = req.result;
+                db.createObjectStore('projects', { keyPath: 'id' });
+                db.createObjectStore('takes', { keyPath: 'id' }).createIndex('projectId', 'projectId');
+                db.createObjectStore('meta');
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+        return dbPromise;
+    }
+    async function dbReq(store, mode, fn) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(store, mode), req = fn(tx.objectStore(store));
+            tx.oncomplete = () => resolve(req && req.result);
+            tx.onerror = () => reject(tx.error);
+        });
+    }
+    const dbPut = (store, v, key) => dbReq(store, 'readwrite', s => key === undefined ? s.put(v) : s.put(v, key));
+    const dbGet = (store, key) => dbReq(store, 'readonly', s => s.get(key));
+    const dbDelete = (store, key) => dbReq(store, 'readwrite', s => s.delete(key));
+    const dbAll = store => dbReq(store, 'readonly', s => s.getAll());
+
+    let saveTimer = null;
+    function saveProject() {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+            project.updated = Date.now();
+            dbPut('projects', project).catch(e => console.warn('프로젝트 저장 실패', e));
+            dbPut('meta', project.id, 'last').catch(() => {});
+        }, 300);
+    }
+
+    async function loadProject(p) {
+        if (rec) endRecording();
+        stopTransport();
+        [...nodes.keys()].forEach(removeTrackNodes);
+        takeBuffers.clear(); takePeaks.clear();
+        project = p;
+        selectedId = p.tracks[0] ? p.tracks[0].id : null;
+        for (const t of p.tracks) {
+            for (const tk of t.takes) {
+                try {
+                    const saved = await dbGet('takes', tk.id);
+                    if (!saved) continue;
+                    if (!ctx) ensureCtx();
+                    const buf = ctx.createBuffer(1, saved.data.length, saved.sr);
+                    buf.copyToChannel(saved.data, 0);
+                    takeBuffers.set(tk.id, buf);
+                    takePeaks.set(tk.id, computePeaks(saved.data));
+                } catch (e) { console.warn('테이크 불러오기 실패', e); }
+            }
+            t.takes = t.takes.filter(tk => takeBuffers.has(tk.id));
+            t.active = Math.min(t.active, t.takes.length - 1);
+        }
+        syncSettingsUI();
+        applyMix();
+        renderTracks();
+        dbPut('meta', p.id, 'last').catch(() => {});
+    }
+
+    function syncSettingsUI() {
+        $('projName').value = project.name;
+        $('bpmInput').value = project.bpm;
+        $('beatsSelect').value = project.beats;
+        $('barsSelect').value = project.bars;
+        $('keySelect').value = project.key;
+        $('countInToggle').checked = project.countIn;
+        $('clickRecToggle').checked = project.clickRec;
+        $('loopRecToggle').checked = project.loopRec;
+        $('syncRange').value = project.syncMs;
+        $('syncValue').textContent = `${project.syncMs > 0 ? '+' : ''}${project.syncMs}ms`;
+        $('masterRange').value = project.master;
+        $('reverbRange').value = project.reverb;
+        $('repeatsSelect').value = project.repeats;
+    }
+
+    function bindSettings() {
+        $('keySelect').innerHTML = NOTE_EN.map((n, i) => `<option value="${i}">${n} (${DO_RE[i]})</option>`).join('');
+        $('projName').addEventListener('change', e => { project.name = e.target.value.trim() || project.name; e.target.value = project.name; saveProject(); });
+        $('bpmInput').addEventListener('change', e => {
+            project.bpm = Math.max(40, Math.min(220, Math.round(Number(e.target.value) || 90)));
+            e.target.value = project.bpm;
+            if (metroOn && !playing) { origin = ctx.currentTime + 0.05; resetBeats(); }
+            saveProject(); updateUI();
+        });
+        $('beatsSelect').addEventListener('change', e => { project.beats = Number(e.target.value); saveProject(); updateUI(); });
+        $('barsSelect').addEventListener('change', e => { project.bars = Number(e.target.value); saveProject(); updateUI(); });
+        $('keySelect').addEventListener('change', e => { project.key = Number(e.target.value); saveProject(); });
+        $('countInToggle').addEventListener('change', e => { project.countIn = e.target.checked; saveProject(); });
+        $('clickRecToggle').addEventListener('change', e => { project.clickRec = e.target.checked; saveProject(); });
+        $('loopRecToggle').addEventListener('change', e => { project.loopRec = e.target.checked; saveProject(); });
+        $('syncRange').addEventListener('input', e => {
+            project.syncMs = Number(e.target.value);
+            $('syncValue').textContent = `${project.syncMs > 0 ? '+' : ''}${project.syncMs}ms`;
+            saveProject();
+        });
+        $('masterRange').addEventListener('input', e => { project.master = Number(e.target.value); applyMix(); saveProject(); });
+        $('reverbRange').addEventListener('input', e => { project.reverb = Number(e.target.value); applyMix(); saveProject(); });
+        $('repeatsSelect').addEventListener('change', e => { project.repeats = Number(e.target.value); saveProject(); });
+    }
+
+    // ---------- 프로젝트 목록 ----------
+    async function openProjects() {
+        if (rec) return;
+        await dbPut('projects', project).catch(() => {});
+        const all = (await dbAll('projects').catch(() => [project])).sort((a, b) => b.updated - a.updated);
+        $('projList').innerHTML = all.map(p => {
+            const takes = p.tracks.reduce((n, t) => n + t.takes.length, 0);
+            return `<div class="proj-item${p.id === project.id ? ' current' : ''}">
+                <div class="info"><b>${esc(p.name)}</b><small>${new Date(p.updated).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · ${p.bpm} BPM · 트랙 ${p.tracks.length}개 · 테이크 ${takes}개</small></div>
+                ${p.id === project.id ? '<span style="color:var(--muted);font-weight:800;font-size:13px">지금 작업 중</span>' : `<button onclick="openProjectById('${p.id}')">열기</button>`}
+                <button onclick="deleteProject('${p.id}')" aria-label="삭제">🗑️</button>
+            </div>`;
+        }).join('');
+        $('projectsDialog').hidden = false;
+    }
+    function closeProjects() { $('projectsDialog').hidden = true; }
+
+    async function openProjectById(id) {
+        const p = await dbGet('projects', id);
+        if (!p) return;
+        closeProjects();
+        await loadProject(p);
+        toast(`📁 「${p.name}」을(를) 열었어요`);
+    }
+
+    async function createProject() {
+        closeProjects();
+        const p = newProject();
+        await dbPut('projects', p).catch(() => {});
+        await loadProject(p);
+        toast('✨ 새 프로젝트를 만들었어요');
+    }
+
+    async function deleteProject(id) {
+        const p = await dbGet('projects', id);
+        if (!p) return;
+        if (!(await confirmDialog('프로젝트 삭제', `「${p.name}」과(와) 모든 테이크를 지울까요? 되돌릴 수 없어요.`, '삭제'))) { openProjects(); return; }
+        for (const t of p.tracks) for (const tk of t.takes) await dbDelete('takes', tk.id).catch(() => {});
+        await dbDelete('projects', id).catch(() => {});
+        if (id === project.id) {
+            const rest = (await dbAll('projects').catch(() => [])).sort((a, b) => b.updated - a.updated);
+            await loadProject(rest[0] || newProject());
+        }
+        openProjects();
+    }
+
+    // ---------- 창·알림 ----------
+    let dialogResolve = null;
+    function askDialog({ title, html = '', buttons, column }) {
+        if (dialogResolve) dialogResolve(null);
+        $('dialogTitle').textContent = title;
+        $('dialogBody').innerHTML = html;
+        $('dialogBody').hidden = !html;
+        const actions = $('dialogActions');
+        actions.className = `dialog-actions${column ? ' column' : ''}`;
+        actions.innerHTML = '';
+        buttons.forEach(b => {
+            const btn = document.createElement('button');
+            btn.textContent = b.label;
+            if (b.cls) btn.className = b.cls;
+            btn.disabled = !!b.disabled;
+            btn.onclick = () => { const r = dialogResolve; dialogResolve = null; $('dialog').hidden = true; r(b.value); };
+            actions.appendChild(btn);
+        });
+        $('dialog').hidden = false;
+        return new Promise(r => { dialogResolve = r; });
+    }
+    const confirmDialog = (title, text, ok) => askDialog({ title, html: esc(text), buttons: [{ label: '취소', value: false }, { label: ok, value: true, cls: 'btn-danger' }] });
+    const showAlert = (title, text) => askDialog({ title, html: esc(text), buttons: [{ label: '확인', value: true, cls: 'btn-accent' }] });
+
+    let toastTimer = null;
+    function toast(msg) {
+        const el = $('toast');
+        el.textContent = msg; el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+    }
+
+    const HELP_KEY = 'acapella-studio-help-v1';
+    function openHelp() { $('helpDialog').hidden = false; }
+    function closeHelp() { $('helpDialog').hidden = true; try { localStorage.setItem(HELP_KEY, '1'); } catch (e) {} }
+
+    // ---------- 키보드 ----------
+    document.addEventListener('keydown', e => {
+        if (e.target.matches('input[type=text], input[type=number], select, textarea')) {
+            if (e.key === 'Enter' || e.key === 'Escape') e.target.blur();
+            return;
+        }
+        if (e.code === 'Space' && e.target.matches('input[type=checkbox]')) return;
+        if (document.querySelector('.overlay:not([hidden])')) {
+            if (e.key === 'Escape') {
+                if (!$('dialog').hidden) { const r = dialogResolve; dialogResolve = null; $('dialog').hidden = true; if (r) r(null); }
+                else { closeProjects(); closeHelp(); }
+            }
+            return;
+        }
+        const idx = project.tracks.findIndex(t => t.id === selectedId), t = track(selectedId);
+        if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+        else if (e.key === 'r' || e.key === 'R' || e.key === 'ㄱ') toggleRecord();
+        else if (e.key === 'Escape') { if (rec) stopRecording(); else if (playing) { stopTransport(); updateUI(); } }
+        else if (e.key === 'ArrowUp' && idx > 0) { e.preventDefault(); selectTrack(project.tracks[idx - 1].id); }
+        else if (e.key === 'ArrowDown' && idx < project.tracks.length - 1) { e.preventDefault(); selectTrack(project.tracks[idx + 1].id); }
+        else if ((e.key === 'm' || e.key === 'M' || e.key === 'ㅡ') && t) setMute(t, !t.mute);
+        else if ((e.key === 's' || e.key === 'S' || e.key === 'ㄴ') && t) setSolo(t, !t.solo);
+    });
+    document.addEventListener('pointerup', e => { const b = e.target.closest('button'); if (b) setTimeout(() => b.blur(), 0); });
+    // 선택 상자를 고른 뒤에는 포커스를 풀어 스페이스·단축키가 바로 동작하게 함
+    document.addEventListener('change', e => { if (e.target.matches('select, input[type=checkbox]')) e.target.blur(); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && (playing || rec)) keepScreenOn(); });
+    window.addEventListener('beforeunload', e => { if (rec) { e.preventDefault(); e.returnValue = ''; } });
+
+    function checkEnvironment() {
+        const ua = navigator.userAgent, warn = $('envWarning');
+        if (/KAKAOTALK/i.test(ua)) {
+            warn.innerHTML = `⚠️ 카카오톡 안에서는 녹음이 안 될 수 있어요. <a href="kakaotalk://web/openExternal?url=${encodeURIComponent(location.href)}">👉 크롬·사파리로 열기</a>`;
+            warn.hidden = false;
+        } else if (/Instagram|FBAN|FBAV|NAVER|Line\//i.test(ua)) {
+            warn.textContent = '⚠️ 앱 안의 브라우저에서는 녹음이 안 될 수 있어요. 메뉴(⋯)에서 "다른 브라우저로 열기"를 눌러 주세요.';
+            warn.hidden = false;
+        } else if (!isSupported) {
+            warn.textContent = '⚠️ 이 브라우저는 녹음을 지원하지 않아요. 최신 크롬, 사파리, 엣지에서 열어 주세요.';
+            warn.hidden = false;
+        }
+    }
+
+    window.onload = async () => {
+        checkEnvironment();
+        bindSettings();
+        let p = null;
+        try {
+            const last = await dbGet('meta', 'last');
+            if (last) p = await dbGet('projects', last);
+        } catch (e) { console.warn('저장된 프로젝트를 불러오지 못했어요', e); }
+        if (!p) p = newProject();
+        await loadProject(p);
+        let seen = false;
+        try { seen = !!localStorage.getItem(HELP_KEY); } catch (e) {}
+        if (!seen) openHelp();
+        requestAnimationFrame(frame);
+    };
+</script>
+</body>
+</html>
