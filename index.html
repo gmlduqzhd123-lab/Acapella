@@ -33,6 +33,7 @@
             --beatbox-bg: #ffc2c7;
             --bass-bg: #c4e4ff;
             --chorus-bg: #c3f5d0;
+            --chorus2-bg: #e2d6ff;
             --melody-bg: #fff3b0;
             --radius: 20px;
             --shadow: 0 6px 18px rgba(30, 40, 60, 0.08);
@@ -109,6 +110,7 @@
         .step-banner button { background: var(--primary); color: white; min-height: 44px; }
 
         .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .grid-container .pad.melody { grid-column: 1 / -1; }
         .pad {
             border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px;
             display: flex; flex-direction: column; gap: 10px; position: relative; transition: box-shadow 0.3s;
@@ -116,6 +118,7 @@
         .pad.beatbox { background: var(--beatbox-bg); }
         .pad.bass { background: var(--bass-bg); }
         .pad.chorus { background: var(--chorus-bg); }
+        .pad.chorus2 { background: var(--chorus2-bg); }
         .pad.melody { background: var(--melody-bg); }
         .pad.next-turn { box-shadow: 0 0 0 4px var(--primary), var(--shadow); }
         .pad.flash { animation: flash 1s 2; }
@@ -244,7 +247,7 @@
 
         .rec-card { text-align: center; max-width: 720px; }
         .rec-card.beatbox { background: #fff0f1; } .rec-card.bass { background: #eef7ff; }
-        .rec-card.chorus { background: #edfcf1; } .rec-card.melody { background: #fffbe6; }
+        .rec-card.chorus { background: #edfcf1; } .rec-card.chorus2 { background: #f4efff; } .rec-card.melody { background: #fffbe6; }
         .rec-part { font-size: 22px; font-weight: 900; }
         .rec-phase { font-size: 84px; font-weight: 900; line-height: 1.1; margin: 8px 0; color: #2c3e50; min-height: 92px; }
         .rec-phase.live { color: var(--danger); font-size: 48px; min-height: 92px; display: flex; align-items: center; justify-content: center; }
@@ -346,7 +349,8 @@
                 <p class="card-desc">튜너를 켜고 "우~" 하고 불러 보세요. 바늘이 가운데에 오고 초록색이 되면 딱 맞은 거예요.</p>
                 <div class="practice-actions">
                     <select id="tunerTarget" aria-label="연습할 파트">
-                        <option value="chorus" selected>👥 화음 음 맞추기</option>
+                        <option value="chorus" selected>👥 화음 1 음 맞추기</option>
+                        <option value="chorus2">🎶 화음 2 음 맞추기</option>
                         <option value="melody">🎵 멜로디 음 맞추기</option>
                         <option value="bass">🎸 베이스 음 맞추기</option>
                         <option value="free">🎤 자유롭게 (가장 가까운 음)</option>
@@ -497,7 +501,7 @@
                 <li><span class="num">1</span><div><b>🎧 유선 이어폰을 꽂아요.</b><br>스피커로 들으면 소리가 다시 녹음되고, 블루투스 이어폰은 박자가 밀려요.</div></li>
                 <li><span class="num">2</span><div><b>🎤 마이크 테스트</b> — "아~" 하고 소리 내서 초록 막대가 움직이면 준비 끝!
                     <div class="mic-test"><button class="btn-primary" id="micTestBtn" onclick="toggleMicTest()">테스트 시작</button><div class="mic-meter"><div id="micMeter"></div></div><span id="micTestMsg"></span></div></div></li>
-                <li><span class="num">3</span><div><b>🥁 → 🎸 → 👥 → 🎵 순서로 녹음해요.</b><br>👂 예시를 듣고 따라 해 본 뒤 🔴 녹음하기! "하나·둘·셋·넷" 다음에 불러요. 먼저 녹음한 파트가 이어폰으로 같이 들려요.</div></li>
+                <li><span class="num">3</span><div><b>🥁 → 🎸 → 👥 → 🎶 → 🎵 순서로 녹음해요.</b><br>👂 예시를 듣고 따라 해 본 뒤 🔴 녹음하기! "하나·둘·셋·넷" 다음에 불러요. 먼저 녹음한 파트가 이어폰으로 같이 들려요.</div></li>
                 <li><span class="num">4</span><div><b>▶ 전체 재생</b>으로 들어 보고, <b>🏆 발표회</b> 탭에서 저장해요.</div></li>
             </ol>
             <div class="modal-actions"><button class="btn-big btn-primary" onclick="closeHelp()">시작하기 🎵</button></div>
@@ -507,11 +511,12 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        const parts = ['beatbox', 'bass', 'chorus', 'melody'];
+        const parts = ['beatbox', 'bass', 'chorus', 'chorus2', 'melody'];
         const PART_INFO = {
-            beatbox: { emoji: '🥁', name: '비트박스' },
+            beatbox: { emoji: '🥁', name: '보컬 퍼커션' },
             bass: { emoji: '🎸', name: '베이스' },
-            chorus: { emoji: '👥', name: '화음' },
+            chorus: { emoji: '👥', name: '화음 1' },
+            chorus2: { emoji: '🎶', name: '화음 2' },
             melody: { emoji: '🎵', name: '멜로디' },
         };
         const PART_NAMES = Object.fromEntries(parts.map(p => [p, `${PART_INFO[p].emoji} ${PART_INFO[p].name}`]));
@@ -520,11 +525,13 @@
         const LOOKAHEAD = 0.1;          // 메트로놈 예약 구간(초)
         const COUNT_WORDS = ['하나', '둘', '셋', '넷'];
 
-        const buffers = { beatbox: null, bass: null, chorus: null, melody: null };  // 녹음된 AudioBuffer
-        const peaks = { beatbox: null, bass: null, chorus: null, melody: null };    // 파형 미리보기
-        const scores = { beatbox: null, bass: null, chorus: null, melody: null };   // 박자 점수
-        const sources = { beatbox: null, bass: null, chorus: null, melody: null };  // 재생 중인 소스
-        const muted = { beatbox: false, bass: false, chorus: false, melody: false }; // 전체 재생·저장에서 뺀 파트
+        const perPart = v => Object.fromEntries(parts.map(p => [p, v]));
+        const buffers = perPart(null);   // 녹음된 AudioBuffer
+        const peaks = perPart(null);     // 파형 미리보기
+        const scores = perPart(null);    // 박자 점수
+        const sources = perPart(null);   // 재생 중인 소스
+        const muted = perPart(false);    // 전체 재생·저장에서 뺀 파트
+        const isSustainPart = p => p === 'chorus' || p === 'chorus2';   // 길게 부르는 화음 파트 (박자 점수 없음)
         const gains = {};
 
         let audioCtx, master;
@@ -599,7 +606,7 @@
         function initAudioCtx() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                // 4개 파트를 합쳐도 소리가 깨지지 않도록 컴프레서를 거쳐 출력
+                // 여러 파트를 합쳐도 소리가 깨지지 않도록 컴프레서를 거쳐 출력
                 const comp = audioCtx.createDynamicsCompressor();
                 comp.threshold.value = -6;
                 comp.ratio.value = 8;
@@ -830,7 +837,7 @@
             }
             updateUI();
             openTab('rec');
-            showToast('✨ 새로 시작해요! 🥁 비트박스부터 녹음해 볼까요?');
+            showToast('✨ 새로 시작해요! 🥁 보컬 퍼커션부터 녹음해 볼까요?');
         }
 
         // --- 녹음 ---
@@ -878,7 +885,7 @@
             micError = null;
             let stream;
             try {
-                // 통화용 음성 처리(에코·잡음 제거, 자동 음량)는 비트박스와 저음을 깎으므로 끔
+                // 통화용 음성 처리(에코·잡음 제거, 자동 음량)는 퍼커션 소리와 저음을 깎으므로 끔
                 stream = await navigator.mediaDevices.getUserMedia({
                     audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
                 });
@@ -1019,7 +1026,7 @@
                 p[i] = max;
             }
             peaks[part] = p;
-            scores[part] = part === 'chorus' ? null : scoreRhythm(data, buffer.sampleRate);
+            scores[part] = isSustainPart(part) ? null : scoreRhythm(data, buffer.sampleRate);
         }
 
         // --- 녹음 화면: 카운트인 → 녹음 중 → 결과 ---
@@ -1067,8 +1074,8 @@
             } else if (state === 'result') {
                 const sc = scores[part];
                 phase.classList.add('small');
-                if (part === 'chorus') {
-                    phase.textContent = '👥 녹음 완료!';
+                if (isSustainPart(part)) {
+                    phase.textContent = `${PART_INFO[part].emoji} 녹음 완료!`;
                     sub.textContent = '화음은 박자 점수 대신 🎯 연습실의 튜너로 음정을 확인해 보세요';
                 } else if (!sc || sc.score === null) {
                     phase.textContent = '🤔 소리가 작았어요';
@@ -1078,7 +1085,7 @@
                     sub.textContent = sc.score >= 90 ? '완벽해요! 🥳' : sc.score >= 70 ? '잘했어요! 👍 초록 점이 박자에 딱 맞은 곳이에요'
                         : '빨간 점이 박자에서 벗어난 곳이에요. 다시 도전해 볼까요? 💪';
                 }
-                const okLabel = next ? `✅ 좋아요! 다음은 ${PART_NAMES[next]}` : '✅ 좋아요! 4파트 완성 🎉';
+                const okLabel = next ? `✅ 좋아요! 다음은 ${PART_NAMES[next]}` : '✅ 좋아요! 모든 파트 완성 🎉';
                 actions.innerHTML =
                     `<button class="btn-big btn-soft" id="recListenBtn" onclick="toggleResultListen()">▶ 같이 들어보기</button>
                      <button class="btn-big btn-soft" onclick="redoRecording()">🔁 다시 녹음</button>
@@ -1105,7 +1112,7 @@
             closeRecView();
             const next = nextTurnPart();
             if (next) focusPad(next);
-            else showToast('🎉 4파트 완성! ▶ 전체 재생으로 들어 보고 🏆 발표회에 저장해요');
+            else showToast('🎉 모든 파트 완성! ▶ 전체 재생으로 들어 보고 🏆 발표회에 저장해요');
         }
 
         function focusPad(part) {
@@ -1193,7 +1200,7 @@
                 text = `<b>${done + 1}단계</b> 다음은 ${PART_NAMES[next]}! 녹음하면 먼저 만든 파트가 이어폰으로 같이 들려요.`;
                 btn = `<button onclick="focusPad('${next}')">👉 ${PART_INFO[next].name}로 가기</button>`;
             } else {
-                text = '🎉 <b>4파트 완성!</b> 아래 <b>▶ 전체 재생</b>으로 들어 보고 <b>🏆 발표회</b>에 저장해요.';
+                text = '🎉 <b>모든 파트 완성!</b> 아래 <b>▶ 전체 재생</b>으로 들어 보고 <b>🏆 발표회</b>에 저장해요.';
                 btn = `<button onclick="openTab('show')">🏆 발표회로</button>`;
             }
             $('stepBanner').innerHTML = dots + `<div class="step-text">${text}</div>` + btn;
@@ -1326,7 +1333,7 @@
         const SONGS = {
             twinkle: {
                 name: '작은 별', origin: '프랑스 민요', bpm: 90,
-                chords: ['C', 'F', 'C', 'G'], chorus: [64, 65, 64, 62],
+                chords: ['C', 'F', 'C', 'G'], chorus: [64, 65, 64, 62], chorus2: [67, 69, 67, 67],
                 melody: [
                     { notes: [60, 60, 67, 67], pos: [0, 2, 4, 6] },
                     { notes: [69, 69, 67], pos: [0, 2, 4] },
@@ -1336,7 +1343,7 @@
             },
             ode: {
                 name: '환희의 송가', origin: '베토벤 교향곡 9번', bpm: 100,
-                chords: ['C', 'G', 'C', 'G'], chorus: [60, 59, 60, 59],
+                chords: ['C', 'G', 'C', 'G'], chorus: [60, 59, 60, 59], chorus2: [64, 62, 64, 62],
                 melody: [
                     { notes: [64, 64, 65, 67], pos: [0, 2, 4, 6] },
                     { notes: [67, 65, 64, 62], pos: [0, 2, 4, 6] },
@@ -1346,7 +1353,7 @@
             },
             mary: {
                 name: '비행기', origin: '미국 민요 「Mary Had a Little Lamb」', bpm: 100,
-                chords: ['C', 'C', 'G', 'C'], chorus: [67, 67, 67, 67],
+                chords: ['C', 'C', 'G', 'C'], chorus: [67, 67, 67, 67], chorus2: [64, 64, 62, 64],
                 melody: [
                     { notes: [64, 62, 60, 62], pos: [0, 2, 4, 6] },
                     { notes: [64, 64, 64], pos: [0, 2, 4] },
@@ -1399,6 +1406,14 @@
                     bars: song.chorus.map(m => ({
                         label: DO_RE[pc(m)],
                         ...eventsToBar([{ pos: 0, len: 8, midi: m + k }], () => '우'),
+                        sustain: true,
+                    })),
+                },
+                chorus2: {
+                    tip: '화음 1과 다른 음으로 "아~" 길게. 두 화음이 겹치면 더 풍성해져요',
+                    bars: song.chorus2.map(m => ({
+                        label: DO_RE[pc(m)],
+                        ...eventsToBar([{ pos: 0, len: 8, midi: m + k }], () => '아'),
                         sustain: true,
                     })),
                 },
@@ -1851,7 +1866,7 @@
                 const diff = (((midiF - targetMidi) % 12) + 18) % 12 - 6;
                 cents = diff * 100;
                 ok = Math.abs(cents) <= 35;
-                if (ok && tgtPart === 'chorus') {
+                if (ok && isSustainPart(tgtPart)) {
                     harmonyHitTime += dt;
                     if (harmonyHitTime >= 3) award('harmony');
                 }
@@ -1935,11 +1950,11 @@
 
         const BADGES = [
             { id: 'rhythmKing', icon: '🥇', name: '박자왕', desc: '박자 점수 90점 이상' },
-            { id: 'beatbox80', icon: '🥁', name: '비트박스 장인', desc: '비트박스 박자 80점 이상' },
+            { id: 'beatbox80', icon: '🥁', name: '퍼커션 장인', desc: '보컬 퍼커션 박자 80점 이상' },
             { id: 'bass80', icon: '🎸', name: '베이스 장인', desc: '베이스 박자 80점 이상' },
             { id: 'melody80', icon: '🎵', name: '멜로디 장인', desc: '멜로디 박자 80점 이상' },
             { id: 'harmony', icon: '🌈', name: '화음 마스터', desc: '튜너에서 화음 음 3초 맞추기' },
-            { id: 'complete', icon: '🏆', name: '4파트 완성', desc: '네 파트를 모두 녹음' },
+            { id: 'complete', icon: '🏆', name: '모든 파트 완성', desc: '다섯 파트를 모두 녹음' },
             { id: 'levelup', icon: '🚀', name: '레벨 업', desc: 'BPM 120 이상에서 80점 이상' },
             { id: 'detective', icon: '🕵️', name: '명탐정', desc: '빠진 파트 퀴즈 3연속 정답' },
             { id: 'showtime', icon: '🎤', name: '발표회 데뷔', desc: '발표회에 작품 저장' },
@@ -1968,7 +1983,7 @@
                 const sc = scores[p] && scores[p].score;
                 if (sc === null || sc === undefined) return;
                 if (sc >= 90) award('rhythmKing');
-                if (sc >= 80 && p !== 'chorus') award(`${p}80`);
+                if (sc >= 80 && !isSustainPart(p)) award(`${p}80`);
                 if (sc >= 80 && bpm >= 120) award('levelup');
             });
             if (parts.every(p => buffers[p])) award('complete');
