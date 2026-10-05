@@ -1,11 +1,12 @@
 // 우리 함께 아카펠라 서비스 워커: 앱 설치(홈 화면에 추가)와 오프라인 열기를 돕는다.
 // 파일을 바꿔도 새 버전을 먼저 받아 오므로 보통은 CACHE_VERSION을 올릴 필요가 없다.
-const CACHE_VERSION = 'acapella-v2';
+const CACHE_VERSION = 'acapella-v3';
 const APP_SHELL = [
     "./",
     "./index.html",
     "./studio.html",
     "./manifest.webmanifest",
+    "./ys-install.js",
     "./icons/icon-192.png",
     "./icons/icon-512.png",
     "./icons/apple-touch-icon.png"
