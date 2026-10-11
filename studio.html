@@ -172,6 +172,14 @@
             .proj-name { width: 100%; order: 3; }
         }
         @media (max-width: 600px) {
+            /* 휴대폰: 맨 윗줄 = 제목 + 설치·QR */
+            header { row-gap: 8px; }
+            header { column-gap: 6px; }
+            header h1 { font-size: 16px; }
+            header h1 small { display: none; }
+            header .st-key { order: 1; padding: 6px 9px; font-size: 13.5px; min-height: 34px; }
+            header > button:not(.st-key) { order: 4; }
+            .st-wide { display: none; }
             :root { --transport-h: 116px; }
             .transport-inner { flex-wrap: wrap; }
             .tp-status { order: -1; flex-basis: 100%; font-size: 13px; }
@@ -197,8 +205,8 @@
     <header>
         <h1>🎧 아카펠라 스튜디오<small>혼자 쌓는 루프 녹음실</small></h1>
         <input type="text" class="proj-name" id="projName" maxlength="40" aria-label="프로젝트 이름">
-        <button type="button" data-ys-install>📲 앱 설치</button>
-        <button type="button" data-qr aria-label="QR 코드로 접속">📱 QR</button>
+        <button type="button" class="st-key" data-ys-install>📲 <span class="st-wide">앱 </span>설치</button>
+        <button type="button" class="st-key" data-qr aria-label="QR 코드로 접속">📱 QR</button>
         <button onclick="openProjects()">📁 프로젝트</button>
         <button onclick="openHelp()">❓</button>
         <button onclick="location.href='index.html'">🏫 수업 모드</button>
