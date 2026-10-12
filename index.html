@@ -327,11 +327,130 @@
     <meta name="apple-mobile-web-app-title" content="아카펠라">
     <script src="ys-install.js"></script>
     <style>.install-btn{display:none}html.can-install .install-btn{display:inline}.install-btn button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}</style>
+    <style>
+        /* ===== 첫 화면 (소개) ===== */
+        body.landing-mode { padding-bottom: 0; background: #f6f4ef; }
+        body.landing-mode > .app-header, body.landing-mode > .tabs, body.landing-mode > main,
+        body.landing-mode > footer, body.landing-mode > .transport { display: none !important; }
+        body:not(.landing-mode) > .landing { display: none; }
+        .landing {
+            --ld-paper: #f6f4ef; --ld-ink: #17181c; --ld-sub: #6b6f7a; --ld-line: #e2ded5; --ld-accent: #ff5a4e;
+            --ld-p1: #ff6b81; --ld-p2: #3d9df5; --ld-p3: #2fbf71; --ld-p4: #9b7bff; --ld-p5: #f5b400;
+            min-height: 100vh; background: var(--ld-paper); color: var(--ld-ink); word-break: keep-all;
+        }
+        .ld-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1180px; margin: 0 auto; padding: 20px 24px; }
+        .ld-logo { font-weight: 900; font-size: 17px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
+        .ld-logo i { width: 10px; height: 10px; border-radius: 50%; background: var(--ld-accent); }
+        .ld-links { display: flex; gap: 6px; align-items: center; }
+        .ld-links button { background: none; min-height: 40px; padding: 6px 10px; font-size: 14px; font-weight: 700; color: var(--ld-sub); border-radius: 10px; }
+        .ld-links button:hover { color: var(--ld-ink); background: rgba(0,0,0,0.04); }
+        .ld-hero { max-width: 1180px; margin: 0 auto; padding: 5vh 24px 30px; display: grid; grid-template-columns: 1fr 1.1fr; gap: 48px; align-items: center; }
+        .ld-label { font-size: 12px; font-weight: 800; letter-spacing: 0.14em; color: var(--ld-accent); }
+        .ld-title { margin-top: 14px; font-size: clamp(44px, 6.4vw, 84px); font-weight: 900; line-height: 1.02; letter-spacing: -0.05em; }
+        .ld-lead { margin-top: 20px; font-size: 18px; line-height: 1.65; color: #3e414a; font-weight: 500; max-width: 470px; }
+        .ld-actions { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .ld-btn { font-weight: 800; font-size: 16px; border-radius: 14px; padding: 15px 22px; min-height: 52px; display: inline-flex; align-items: center; gap: 8px; }
+        .ld-btn.dark { background: var(--ld-ink); color: white; }
+        .ld-btn.line { background: transparent; color: var(--ld-ink); box-shadow: inset 0 0 0 2px var(--ld-ink); }
+        .ld-btn.demo { background: transparent; color: var(--ld-accent); padding: 15px 8px; }
+        .ld-btn.demo .dot { width: 34px; height: 34px; border-radius: 50%; background: var(--ld-accent); color: white; display: grid; place-items: center; font-size: 13px; }
+        .ld-score { background: white; border-radius: 22px; padding: 22px 22px 18px; box-shadow: 0 30px 70px rgba(30,25,15,0.10), 0 2px 0 var(--ld-line); }
+        .ld-score-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 13px; font-weight: 800; color: var(--ld-sub); }
+        .ld-score-head b { color: var(--ld-ink); }
+        .ld-live { display: inline-flex; align-items: center; gap: 6px; color: var(--ld-accent); }
+        .ld-live i { width: 7px; height: 7px; border-radius: 50%; background: var(--ld-accent); animation: ldBlink 1s infinite; }
+        @keyframes ldBlink { 50% { opacity: 0.25; } }
+        .ld-rows { position: relative; }
+        .ld-row { display: grid; grid-template-columns: 96px 1fr; align-items: center; gap: 10px; height: 44px; border-top: 1px dashed var(--ld-line);
+            opacity: 0; transform: translateX(-8px); animation: ldIn 0.6s forwards; }
+        .ld-row:last-child { border-bottom: 1px dashed var(--ld-line); }
+        @keyframes ldIn { to { opacity: 1; transform: none; } }
+        .ld-row .name { font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+        .ld-row .name i { width: 9px; height: 9px; border-radius: 3px; }
+        .ld-lane { position: relative; height: 26px; }
+        .ld-note { position: absolute; top: 3px; height: 20px; border-radius: 6px; transition: transform 0.1s, filter 0.1s; }
+        .ld-note.hit { transform: scaleY(1.25); filter: brightness(1.15) saturate(1.2); }
+        .ld-bars { position: absolute; inset: 0 0 0 106px; pointer-events: none; display: grid; grid-template-columns: repeat(4, 1fr); }
+        .ld-bars div { border-left: 1px solid #efece5; }
+        .ld-playhead { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ld-ink); left: 106px; border-radius: 1px; box-shadow: 0 0 0 3px rgba(23,24,28,0.06); }
+        .ld-score-foot { margin-top: 10px; padding-left: 106px; display: grid; grid-template-columns: repeat(4, 1fr); font-size: 12px; color: var(--ld-sub); font-weight: 700; }
+        .ld-score-foot span { padding-left: 4px; }
+        .ld-steps { max-width: 1132px; margin: 30px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 2px solid var(--ld-ink); }
+        .ld-step { padding: 22px 24px 10px 0; }
+        .ld-step b { font-size: 13px; font-weight: 900; color: var(--ld-accent); letter-spacing: 0.1em; }
+        .ld-step h3 { margin-top: 8px; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+        .ld-step p { margin-top: 6px; font-size: 14px; color: var(--ld-sub); line-height: 1.55; }
+        .ld-footer { text-align: center; color: #9a9da6; font-size: 12px; padding: 36px 16px 26px; line-height: 1.7; }
+        .ld-footer a { color: inherit; }
+        @media (max-width: 900px) {
+            .ld-hero { grid-template-columns: 1fr; gap: 30px; padding-top: 2vh; }
+            .ld-steps { grid-template-columns: 1fr; margin: 30px 24px 0; }
+            .ld-step { padding-right: 0; border-bottom: 1px solid var(--ld-line); }
+            .ld-row { grid-template-columns: 84px 1fr; }
+            .ld-bars, .ld-playhead { left: 94px; } .ld-bars { inset: 0 0 0 94px; } .ld-score-foot { padding-left: 94px; }
+            .ld-links .ld-hide-sm { display: none; }
+        }
+        .ld-logo, .ld-links button { white-space: nowrap; }
+        @media (max-width: 420px) {
+            .ld-nav { padding: 16px 16px; }
+            .ld-logo { font-size: 15px; }
+            .ld-links { gap: 0; }
+            .ld-links button { padding: 6px 7px; font-size: 13px; }
+        }
+        .app-header h1 { cursor: pointer; }
+        body.landing-mode > .warn-banner { position: fixed; top: 10px; left: 16px; right: 16px; margin: 0 auto; z-index: 15; box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+    </style>
 </head>
-<body>
+<body class="landing-mode">
+
+    <!-- 첫 화면 (소개) -->
+    <div class="landing" id="landing">
+        <nav class="ld-nav">
+            <div class="ld-logo"><i></i>우리 함께 아카펠라</div>
+            <div class="ld-links">
+                <button type="button" class="ld-hide-sm" onclick="enterApp()">수업 모드</button>
+                <button type="button" class="ld-hide-sm" onclick="location.href='studio.html'">스튜디오</button>
+                <button type="button" onclick="enterApp(true)">사용법</button>
+                <button type="button" data-ys-install>📲 앱 설치</button>
+                <button type="button" data-qr aria-label="QR 코드로 접속">📱 QR</button>
+            </div>
+        </nav>
+
+        <section class="ld-hero">
+            <div>
+                <div class="ld-label">ACAPELLA LOOP STUDIO · FOR CLASSROOMS</div>
+                <h2 class="ld-title">우리 함께<br>아카펠라</h2>
+                <p class="ld-lead">한 파트씩 녹음해 겹겹이 쌓는 루프 녹음실. 카운트인, 박자 채점, 코드 가이드까지 — 브라우저 하나로 수업이 무대가 됩니다.</p>
+                <div class="ld-actions">
+                    <button type="button" class="ld-btn dark" onclick="enterApp()">수업 시작하기 →</button>
+                    <button type="button" class="ld-btn line" onclick="location.href='studio.html'">스튜디오</button>
+                    <button type="button" class="ld-btn demo" id="ldDemoBtn" onclick="playLandingDemo()"><span class="dot">▶</span><span id="ldDemoLabel">8초 데모 듣기</span></button>
+                </div>
+            </div>
+            <div class="ld-score" aria-hidden="true">
+                <div class="ld-score-head"><span><b>작은 별</b> · C · 100 BPM · 4마디</span><span class="ld-live"><i></i>LAYERING</span></div>
+                <div class="ld-rows" id="ldRows">
+                    <div class="ld-bars"><div></div><div></div><div></div><div></div></div>
+                    <div class="ld-playhead" id="ldPlayhead"></div>
+                </div>
+                <div class="ld-score-foot"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+            </div>
+        </section>
+
+        <section class="ld-steps">
+            <div class="ld-step"><b>01</b><h3>예시 듣고 따라 하기</h3><p>파트별 계이름 카드와 예시 소리로 악보 없이도 바로 시작해요.</p></div>
+            <div class="ld-step"><b>02</b><h3>한 파트씩 겹쳐 쌓기</h3><p>먼저 녹음한 파트를 들으며 박자에 딱 맞춰 다음 파트를 녹음해요.</p></div>
+            <div class="ld-step"><b>03</b><h3>발표하고 함께 듣기</h3><p>완성곡을 저장하고 발표회 모드에서 모둠별로 감상·투표해요.</p></div>
+        </section>
+
+        <footer class="ld-footer">
+            © 2026 엽쌤스쿨. All rights reserved. · <a href="https://gmlduqzhd123-lab.github.io/YScode/">엽쌤의 다른 앱 보기 →</a><br>
+            가이드 선율은 저작권 보호기간이 끝난 민요·고전 음악이며, 녹음은 이 기기에만 저장돼요.
+        </footer>
+    </div>
 
     <header class="app-header">
-        <h1>🎤 우리 함께 아카펠라</h1>
+        <h1 onclick="showLanding()" title="첫 화면으로">🎤 우리 함께 아카펠라</h1>
         <div class="header-actions">
             <button class="chip-btn" id="badgeChip" onclick="openTab('show')">🏅 0/9</button>
             <span class="header-key"><button class="chip-btn" type="button" data-ys-install>📲 <span class="chip-long">앱 </span>설치</button><button class="chip-btn" type="button" data-qr aria-label="QR 코드로 접속">📱 QR</button></span>
@@ -2386,6 +2505,108 @@
             }
         }
 
+
+        // --- 첫 화면 (소개) ---
+        // 같은 탭에서 다시 열거나(#app·새로고침), 홈 화면에 설치한 앱으로 열면 소개 없이 바로 녹음실
+        const ENTERED_KEY = 'acapella-entered';
+        const LD_BPM = 100, LD_STEP = 60 / LD_BPM / 2, LD_STEPS = 32;
+        const LD_PARTS = [
+            { name: '보컬 퍼커션', color: 'var(--ld-p1)', notes: [...Array(32)].map((_, i) => [i, 0.7]), dim: true },
+            { name: '베이스', color: 'var(--ld-p2)', notes: [0, 8, 16, 24].flatMap(b => [[b, 3.6], [b + 4, 1.8], [b + 6, 1.8]]) },
+            { name: '화음 1', color: 'var(--ld-p3)', notes: [0, 8, 16, 24].map(b => [b, 7.8]) },
+            { name: '화음 2', color: 'var(--ld-p4)', notes: [0, 8, 16, 24].map(b => [b, 7.8]) },
+            { name: '멜로디', color: 'var(--ld-p5)', notes: [[0,1.8],[2,1.8],[4,1.8],[6,1.8],[8,1.8],[10,1.8],[12,3.8],[16,1.8],[18,1.8],[20,1.8],[22,1.8],[24,1.8],[26,1.8],[28,3.8]] },
+        ];
+        let ldDemoStart = null, ldNotes = [];
+
+        function initLanding() {
+            const rows = $('ldRows');
+            LD_PARTS.forEach((p, r) => {
+                const row = document.createElement('div');
+                row.className = 'ld-row';
+                row.style.animationDelay = `${0.2 + r * 0.35}s`;
+                row.innerHTML = `<div class="name"><i style="background:${p.color}"></i>${p.name}</div><div class="ld-lane"></div>`;
+                const lane = row.querySelector('.ld-lane');
+                p.notes.forEach(([st, len]) => {
+                    const n = document.createElement('div');
+                    n.className = 'ld-note';
+                    n.style.left = `${st / LD_STEPS * 100}%`;
+                    n.style.width = `calc(${len / LD_STEPS * 100}% - 2px)`;
+                    n.style.background = p.color;
+                    n.style.opacity = p.dim ? 0.55 : 0.85;
+                    lane.appendChild(n);
+                    ldNotes.push({ el: n, s: st, len });
+                });
+                rows.appendChild(row);
+            });
+            let entered = false;
+            try { entered = !!sessionStorage.getItem(ENTERED_KEY); } catch (e) {}
+            const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+            if (location.hash === '#app' || entered || standalone) enterApp();
+            else requestAnimationFrame(landingFrame);
+        }
+
+        function landingFrame(now) {
+            if (!document.body.classList.contains('landing-mode')) return;
+            const lane = $('ldRows').querySelector('.ld-lane');
+            const loop = LD_STEP * LD_STEPS;
+            let pos;
+            if (ldDemoStart !== null && audioCtx && audioCtx.currentTime < ldDemoStart + loop) {
+                pos = Math.max(0, (audioCtx.currentTime - ldDemoStart) / loop);
+            } else {
+                if (ldDemoStart !== null) { ldDemoStart = null; $('ldDemoLabel').textContent = '다시 듣기'; }
+                pos = (now / 1000 % loop) / loop;
+            }
+            $('ldPlayhead').style.left = `${lane.offsetLeft + pos * lane.offsetWidth}px`;
+            const step = pos * LD_STEPS;
+            ldNotes.forEach(n => n.el.classList.toggle('hit', step >= n.s && step < n.s + Math.min(n.len, 0.9)));
+            requestAnimationFrame(landingFrame);
+        }
+
+        // 녹음실로 들어가기 (처음이거나 '사용법'을 누르면 사용법 창도 열기)
+        function enterApp(withHelp) {
+            document.body.classList.remove('landing-mode');
+            try { sessionStorage.setItem(ENTERED_KEY, '1'); } catch (e) {}
+            if (location.hash !== '#app') history.replaceState(null, '', '#app');
+            window.scrollTo({ top: 0 });
+            updateUI();
+            let seen = false;
+            try { seen = !!localStorage.getItem(HELP_KEY); } catch (e) {}
+            if (withHelp || !seen) openHelp();
+        }
+
+        // 앱 제목을 누르면 첫 화면으로
+        function showLanding() {
+            if (rec || recView) return;
+            stopPlayback();
+            document.body.classList.add('landing-mode');
+            history.replaceState(null, '', location.pathname);
+            try { sessionStorage.removeItem(ENTERED_KEY); } catch (e) {}
+            window.scrollTo({ top: 0 });
+            requestAnimationFrame(landingFrame);
+        }
+
+        // 8초 데모: 다섯 파트로 부르는 「작은 별」을 합성해서 들려줌 (C-F-C-G)
+        function playLandingDemo() {
+            initAudioCtx();
+            const out = audioCtx.destination, t0 = audioCtx.currentTime + 0.1, S = LD_STEP;
+            ldDemoStart = t0;
+            $('ldDemoLabel').textContent = '재생 중…';
+            const tone = (m, t, dur, type, vol) => {
+                const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                o.type = type; o.frequency.value = midiToFreq(m);
+                envelope(g, t, vol, 0.03, dur);
+                o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.02);
+            };
+            const pat = ['kick', 'hat', 'snare', 'hat', 'kick', 'kick', 'snare', 'hat'];
+            for (let i = 0; i < LD_STEPS; i++) synthDrum(pat[i % 8], t0 + i * S, out);
+            [48, 41, 48, 43].forEach((r, b) => [[0, 3.6], [4, 1.8], [6, 1.8]].forEach(([st, l]) => tone(r, t0 + (b * 8 + st) * S, l * S, 'triangle', 0.32)));
+            [64, 65, 64, 62].forEach((m, b) => tone(m, t0 + b * 8 * S, 7.8 * S, 'sine', 0.09));
+            [67, 69, 67, 67].forEach((m, b) => tone(m, t0 + b * 8 * S, 7.8 * S, 'sine', 0.08));
+            [[60,0,2],[60,2,2],[67,4,2],[67,6,2],[69,8,2],[69,10,2],[67,12,4],[65,16,2],[65,18,2],[64,20,2],[64,22,2],[62,24,2],[62,26,2],[60,28,4]]
+                .forEach(([m, st, l]) => tone(m + 12, t0 + st * S, l * S * 0.92, 'triangle', 0.14));
+        }
+
         // 키보드: 스페이스 = 전체 재생/멈춤, Esc = 창 닫기
         document.addEventListener('keydown', e => {
             if (e.target.matches('input, select, textarea') && e.key !== 'Escape') return;
@@ -2395,7 +2616,7 @@
                 else if (!$('settingsOverlay').hidden) closeSettings();
                 else if (!$('helpOverlay').hidden) closeHelp();
                 else if (document.body.classList.contains('show-mode')) toggleShowMode();
-            } else if (e.code === 'Space' && !e.target.matches('button') && !document.querySelector('.overlay:not([hidden])')) {
+            } else if (e.code === 'Space' && !e.target.matches('button') && !document.body.classList.contains('landing-mode') && !document.querySelector('.overlay:not([hidden])')) {
                 e.preventDefault();
                 togglePlayAll();
             }
@@ -2430,9 +2651,7 @@
                 importFiles([...e.target.files]);
                 e.target.value = '';
             });
-            let seen = false;
-            try { seen = !!localStorage.getItem(HELP_KEY); } catch (e) {}
-            if (!seen) openHelp();
+            initLanding();
             requestAnimationFrame(render);
         };
     </script>
