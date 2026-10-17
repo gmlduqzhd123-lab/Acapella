@@ -338,24 +338,31 @@
             --ld-p1: #ff6b81; --ld-p2: #3d9df5; --ld-p3: #2fbf71; --ld-p4: #9b7bff; --ld-p5: #f5b400;
             min-height: 100vh; background: var(--ld-paper); color: var(--ld-ink); word-break: keep-all;
         }
-        .ld-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1180px; margin: 0 auto; padding: 20px 24px; }
+        .ld-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1180px; margin: 0 auto; padding: 20px 24px; position: relative; }
+        .ld-menu-btn { display: none; background: none; font-size: 22px; min-height: 44px; padding: 4px 12px; color: var(--ld-ink); }
         .ld-logo { font-weight: 900; font-size: 17px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
         .ld-logo i { width: 10px; height: 10px; border-radius: 50%; background: var(--ld-accent); }
         .ld-links { display: flex; gap: 6px; align-items: center; }
         .ld-links button { background: none; min-height: 40px; padding: 6px 10px; font-size: 14px; font-weight: 700; color: var(--ld-sub); border-radius: 10px; }
         .ld-links button:hover { color: var(--ld-ink); background: rgba(0,0,0,0.04); }
-        .ld-hero { max-width: 1180px; margin: 0 auto; padding: 5vh 24px 30px; display: grid; grid-template-columns: 1fr 1.1fr; gap: 48px; align-items: center; }
+        .ld-hero { max-width: 1180px; margin: 0 auto; padding: 5vh 24px 30px; display: grid; grid-template-columns: 1fr 1.1fr;
+            grid-template-areas: "text score" "actions score"; column-gap: 48px; row-gap: 30px; align-items: center; }
+        .ld-text { grid-area: text; align-self: end; }
+        .ld-actions { grid-area: actions; align-self: start; }
+        .ld-score { grid-area: score; }
         .ld-label { font-size: 12px; font-weight: 800; letter-spacing: 0.14em; color: var(--ld-accent); }
         .ld-title { margin-top: 14px; font-size: clamp(44px, 6.4vw, 84px); font-weight: 900; line-height: 1.02; letter-spacing: -0.05em; }
         .ld-lead { margin-top: 20px; font-size: 18px; line-height: 1.65; color: #3e414a; font-weight: 500; max-width: 470px; }
-        .ld-actions { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .ld-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
         .ld-btn { font-weight: 800; font-size: 16px; border-radius: 14px; padding: 15px 22px; min-height: 52px; display: inline-flex; align-items: center; gap: 8px; }
         .ld-btn.dark { background: var(--ld-ink); color: white; }
         .ld-btn.line { background: transparent; color: var(--ld-ink); box-shadow: inset 0 0 0 2px var(--ld-ink); }
-        .ld-btn.demo { background: transparent; color: var(--ld-accent); padding: 15px 8px; }
-        .ld-btn.demo .dot { width: 34px; height: 34px; border-radius: 50%; background: var(--ld-accent); color: white; display: grid; place-items: center; font-size: 13px; }
+        .ld-demo { display: inline-flex; align-items: center; gap: 8px; background: #fff1ef; color: var(--ld-accent); min-height: 40px;
+            padding: 4px 14px 4px 4px; border-radius: 999px; font-size: 14px; font-weight: 800; white-space: nowrap; }
+        .ld-demo .dot { width: 32px; height: 32px; border-radius: 50%; background: var(--ld-accent); color: white; display: grid; place-items: center; font-size: 12px; }
+        .ld-demo.playing .dot { animation: ldBlink 1s infinite; }
         .ld-score { background: white; border-radius: 22px; padding: 22px 22px 18px; box-shadow: 0 30px 70px rgba(30,25,15,0.10), 0 2px 0 var(--ld-line); }
-        .ld-score-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 13px; font-weight: 800; color: var(--ld-sub); }
+        .ld-score-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 13px; font-weight: 800; color: var(--ld-sub); }
         .ld-score-head b { color: var(--ld-ink); }
         .ld-live { display: inline-flex; align-items: center; gap: 6px; color: var(--ld-accent); }
         .ld-live i { width: 7px; height: 7px; border-radius: 50%; background: var(--ld-accent); animation: ldBlink 1s infinite; }
@@ -375,27 +382,43 @@
         .ld-playhead { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ld-ink); left: 106px; border-radius: 1px; box-shadow: 0 0 0 3px rgba(23,24,28,0.06); }
         .ld-score-foot { margin-top: 10px; padding-left: 106px; display: grid; grid-template-columns: repeat(4, 1fr); font-size: 12px; color: var(--ld-sub); font-weight: 700; }
         .ld-score-foot span { padding-left: 4px; }
-        .ld-steps { max-width: 1132px; margin: 30px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 2px solid var(--ld-ink); }
+        .ld-steps { width: calc(100% - 48px); max-width: 1132px; margin: 30px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 2px solid var(--ld-ink); }
         .ld-step { padding: 22px 24px 10px 0; }
         .ld-step b { font-size: 13px; font-weight: 900; color: var(--ld-accent); letter-spacing: 0.1em; }
         .ld-step h3 { margin-top: 8px; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
         .ld-step p { margin-top: 6px; font-size: 14px; color: var(--ld-sub); line-height: 1.55; }
         .ld-footer { text-align: center; color: #9a9da6; font-size: 12px; padding: 36px 16px 26px; line-height: 1.7; }
         .ld-footer a { color: inherit; }
-        @media (max-width: 900px) {
-            .ld-hero { grid-template-columns: 1fr; gap: 30px; padding-top: 2vh; }
-            .ld-steps { grid-template-columns: 1fr; margin: 30px 24px 0; }
+        @media (max-width: 760px) {
+            .ld-nav { padding-top: 12px; padding-bottom: 8px; }
+            .ld-hero { grid-template-columns: 1fr; grid-template-areas: "text" "score" "actions"; row-gap: 16px; padding-top: 0; }
+            .ld-text { align-self: auto; }
+            .ld-label { font-size: 11px; }
+            .ld-title { margin-top: 8px; font-size: clamp(36px, 10.5vw, 52px); }
+            .ld-lead { font-size: 15px; line-height: 1.6; margin-top: 10px; }
+            .ld-score-foot { display: none; }
+            .ld-actions .ld-btn { flex: 1 1 140px; justify-content: center; }
+            .ld-score { padding: 16px 14px 12px; border-radius: 18px; }
+            .ld-row { grid-template-columns: 76px 1fr; height: 30px; gap: 8px; }
+            .ld-score-head { margin-bottom: 8px; }
+            .ld-row .name { font-size: 12px; }
+            .ld-lane { height: 20px; }
+            .ld-note { top: 2px; height: 16px; border-radius: 5px; }
+            .ld-bars, .ld-playhead { left: 84px; } .ld-bars { inset: 0 0 0 84px; } .ld-score-foot { padding-left: 84px; }
+            .ld-steps { grid-template-columns: 1fr; }
             .ld-step { padding-right: 0; border-bottom: 1px solid var(--ld-line); }
-            .ld-row { grid-template-columns: 84px 1fr; }
-            .ld-bars, .ld-playhead { left: 94px; } .ld-bars { inset: 0 0 0 94px; } .ld-score-foot { padding-left: 94px; }
-            .ld-links .ld-hide-sm { display: none; }
+            /* 좁은 화면: 같은 메뉴 항목을 ☰ 버튼으로 */
+            .ld-menu-btn { display: block; }
+            .ld-links { display: none; position: absolute; top: calc(100% - 8px); right: 16px; z-index: 12; flex-direction: column; align-items: stretch;
+                background: white; border-radius: 16px; padding: 8px; min-width: 180px; box-shadow: 0 16px 40px rgba(0,0,0,0.14); }
+            .ld-links.open { display: flex; }
+            .ld-links button { text-align: left; font-size: 15px; color: var(--ld-ink); min-height: 46px; padding: 8px 14px; }
         }
         .ld-logo, .ld-links button { white-space: nowrap; }
         @media (max-width: 420px) {
-            .ld-nav { padding: 16px 16px; }
-            .ld-logo { font-size: 15px; }
-            .ld-links { gap: 0; }
-            .ld-links button { padding: 6px 7px; font-size: 13px; }
+            .ld-nav { padding: 14px 12px 14px 16px; }
+            .ld-hero { padding-left: 16px; padding-right: 16px; }
+            .ld-score-head { font-size: 12px; }
         }
         .app-header h1 { cursor: pointer; }
         body.landing-mode > .warn-banner { position: fixed; top: 10px; left: 16px; right: 16px; margin: 0 auto; z-index: 15; box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
@@ -407,9 +430,10 @@
     <div class="landing" id="landing">
         <nav class="ld-nav">
             <div class="ld-logo"><i></i>우리 함께 아카펠라</div>
-            <div class="ld-links">
-                <button type="button" class="ld-hide-sm" onclick="enterApp()">수업 모드</button>
-                <button type="button" class="ld-hide-sm" onclick="location.href='studio.html'">스튜디오</button>
+            <button type="button" class="ld-menu-btn" id="ldMenuBtn" aria-label="메뉴" aria-expanded="false" onclick="toggleLandingMenu(event)">☰</button>
+            <div class="ld-links" id="ldLinks">
+                <button type="button" onclick="enterApp()">수업 모드</button>
+                <button type="button" onclick="location.href='studio.html'">스튜디오</button>
                 <button type="button" onclick="enterApp(true)">사용법</button>
                 <button type="button" data-ys-install>📲 앱 설치</button>
                 <button type="button" data-qr aria-label="QR 코드로 접속">📱 QR</button>
@@ -417,18 +441,20 @@
         </nav>
 
         <section class="ld-hero">
-            <div>
+            <div class="ld-text">
                 <div class="ld-label">ACAPELLA LOOP STUDIO · FOR CLASSROOMS</div>
                 <h2 class="ld-title">우리 함께<br>아카펠라</h2>
                 <p class="ld-lead">한 파트씩 녹음해 겹겹이 쌓는 루프 녹음실. 카운트인, 박자 채점, 코드 가이드까지 — 브라우저 하나로 수업이 무대가 됩니다.</p>
-                <div class="ld-actions">
-                    <button type="button" class="ld-btn dark" onclick="enterApp()">수업 시작하기 →</button>
-                    <button type="button" class="ld-btn line" onclick="location.href='studio.html'">스튜디오</button>
-                    <button type="button" class="ld-btn demo" id="ldDemoBtn" onclick="playLandingDemo()"><span class="dot">▶</span><span id="ldDemoLabel">8초 데모 듣기</span></button>
-                </div>
             </div>
-            <div class="ld-score" aria-hidden="true">
-                <div class="ld-score-head"><span><b>작은 별</b> · C · 100 BPM · 4마디</span><span class="ld-live"><i></i>LAYERING</span></div>
+            <div class="ld-actions">
+                <button type="button" class="ld-btn dark" onclick="enterApp()">수업 시작하기 →</button>
+                <button type="button" class="ld-btn line" onclick="location.href='studio.html'">스튜디오</button>
+            </div>
+            <div class="ld-score">
+                <div class="ld-score-head">
+                    <span><b>작은 별</b> · C · 100 BPM · 4마디</span>
+                    <button type="button" class="ld-demo" id="ldDemoBtn" onclick="playLandingDemo()"><span class="dot">▶</span><span id="ldDemoLabel">8초 데모 듣기</span></button>
+                </div>
                 <div class="ld-rows" id="ldRows">
                     <div class="ld-bars"><div></div><div></div><div></div><div></div></div>
                     <div class="ld-playhead" id="ldPlayhead"></div>
@@ -2541,9 +2567,14 @@
             });
             let entered = false;
             try { entered = !!sessionStorage.getItem(ENTERED_KEY); } catch (e) {}
-            const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
-            if (location.hash === '#app' || entered || standalone) enterApp();
-            else requestAnimationFrame(landingFrame);
+            const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+            const isReload = nav ? nav.type === 'reload' : false;
+            // PC·휴대폰·설치한 앱 모두 같은 규칙: 새로 열면 첫 화면, 새로고침(녹음 중이던 화면 유지)과 스튜디오에서 돌아올 때(#app)만 바로 녹음실
+            if (location.hash === '#app' || (isReload && entered)) enterApp();
+            else {
+                try { sessionStorage.removeItem(ENTERED_KEY); } catch (e) {}
+                requestAnimationFrame(landingFrame);
+            }
         }
 
         function landingFrame(now) {
@@ -2554,7 +2585,7 @@
             if (ldDemoStart !== null && audioCtx && audioCtx.currentTime < ldDemoStart + loop) {
                 pos = Math.max(0, (audioCtx.currentTime - ldDemoStart) / loop);
             } else {
-                if (ldDemoStart !== null) { ldDemoStart = null; $('ldDemoLabel').textContent = '다시 듣기'; }
+                if (ldDemoStart !== null) { ldDemoStart = null; $('ldDemoLabel').textContent = '다시 듣기'; $('ldDemoBtn').classList.remove('playing'); }
                 pos = (now / 1000 % loop) / loop;
             }
             $('ldPlayhead').style.left = `${lane.offsetLeft + pos * lane.offsetWidth}px`;
@@ -2567,13 +2598,30 @@
         function enterApp(withHelp) {
             document.body.classList.remove('landing-mode');
             try { sessionStorage.setItem(ENTERED_KEY, '1'); } catch (e) {}
-            if (location.hash !== '#app') history.replaceState(null, '', '#app');
+            // 주소에 #app을 남기지 않음 (탭을 되살리거나 주소를 공유해도 첫 화면부터 보이도록)
+            if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+            closeLandingMenu();
             window.scrollTo({ top: 0 });
             updateUI();
             let seen = false;
             try { seen = !!localStorage.getItem(HELP_KEY); } catch (e) {}
             if (withHelp || !seen) openHelp();
         }
+
+        // 이미 열린 첫 화면에서 주소만 #app으로 바뀌어도 녹음실로
+        window.addEventListener('hashchange', () => { if (location.hash === '#app') enterApp(); });
+
+        function toggleLandingMenu(e) {
+            e.stopPropagation();
+            const open = $('ldLinks').classList.toggle('open');
+            $('ldMenuBtn').setAttribute('aria-expanded', open);
+        }
+        function closeLandingMenu() {
+            $('ldLinks').classList.remove('open');
+            $('ldMenuBtn').setAttribute('aria-expanded', 'false');
+        }
+        // 메뉴 바깥을 누르거나 메뉴 항목을 고르면 닫기
+        document.addEventListener('click', e => { if (!e.target.closest('#ldMenuBtn')) closeLandingMenu(); });
 
         // 앱 제목을 누르면 첫 화면으로
         function showLanding() {
@@ -2592,6 +2640,7 @@
             const out = audioCtx.destination, t0 = audioCtx.currentTime + 0.1, S = LD_STEP;
             ldDemoStart = t0;
             $('ldDemoLabel').textContent = '재생 중…';
+            $('ldDemoBtn').classList.add('playing');
             const tone = (m, t, dur, type, vol) => {
                 const o = audioCtx.createOscillator(), g = audioCtx.createGain();
                 o.type = type; o.frequency.value = midiToFreq(m);
