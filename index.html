@@ -415,6 +415,26 @@
             .ld-links button { text-align: left; font-size: 15px; color: var(--ld-ink); min-height: 46px; padding: 8px 14px; }
         }
         .ld-logo, .ld-links button { white-space: nowrap; }
+        /* 휴대폰: 앱 설치·QR은 ☰ 메뉴 안이 아니라 맨 윗줄(☰ 옆)에 바로 보이게 */
+        .ld-key { display: none; }
+        @media (max-width: 760px) {
+            .ld-key { display: flex; gap: 6px; margin-left: auto; }
+            .ld-key button { background: white; min-height: 36px; padding: 5px 10px; font-size: 13.5px; font-weight: 800; color: var(--ld-ink);
+                border-radius: 999px; box-shadow: inset 0 0 0 1.5px var(--ld-line); white-space: nowrap; }
+            .ld-nav { gap: 6px; }
+            .ld-menu-btn { padding: 4px 6px 4px 8px; }
+            .ld-links [data-ys-install], .ld-links [data-qr] { display: none; }
+        }
+        @media (max-width: 400px) {
+            .ld-logo { font-size: 15.5px; gap: 6px; }
+            .ld-key { gap: 4px; }
+            .ld-key button { padding: 5px 8px; font-size: 13px; }
+        }
+        @media (max-width: 340px) {
+            .ld-nav { padding-left: 12px; padding-right: 8px; }
+            .ld-logo { font-size: 14.5px; }
+            .ld-logo i { display: none; }
+        }
         @media (max-width: 420px) {
             .ld-nav { padding: 14px 12px 14px 16px; }
             .ld-hero { padding-left: 16px; padding-right: 16px; }
@@ -430,6 +450,7 @@
     <div class="landing" id="landing">
         <nav class="ld-nav">
             <div class="ld-logo"><i></i>우리 함께 아카펠라</div>
+            <span class="ld-key"><button type="button" data-ys-install>📲 설치</button><button type="button" data-qr aria-label="QR 코드로 접속">📱 QR</button></span>
             <button type="button" class="ld-menu-btn" id="ldMenuBtn" aria-label="메뉴" aria-expanded="false" onclick="toggleLandingMenu(event)">☰</button>
             <div class="ld-links" id="ldLinks">
                 <button type="button" onclick="enterApp()">수업 모드</button>
